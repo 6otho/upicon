@@ -9,18 +9,7 @@ export default {
     // ==========================================
     const sharedCSS = `
       <style>
-        body, html { 
-            margin: 0; padding: 0; min-height: 100%; font-family: 'Segoe UI', Roboto, sans-serif; 
-            background-color: #050608; 
-            background-image: 
-                /* Emby 标志性的绿色光晕与科幻青色光晕交织 */
-                radial-gradient(circle at 15% 20%, rgba(82, 181, 75, 0.12) 0%, transparent 50%), 
-                radial-gradient(circle at 85% 80%, rgba(0, 242, 254, 0.12) 0%, transparent 50%), 
-                /* 纯代码绘制的 Emby 媒体元素底纹 (播放键/胶片/电视/光盘) */
-                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg stroke='rgba(255,255,255,0.035)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3C!-- Play --%3E%3Ccircle cx='30' cy='30' r='12'/%3E%3Cpolygon points='28,25 28,35 36,30'/%3E%3C!-- Film --%3E%3Crect x='80' y='20' width='18' height='24' rx='2'/%3E%3Cpath d='M80 26h18M80 32h18M80 38h18M84 20v24M94 20v24'/%3E%3C!-- TV --%3E%3Crect x='25' y='80' width='22' height='16' rx='2'/%3E%3Cpath d='M31 80l5-5l5 5'/%3E%3Cpath d='M31 96h10'/%3E%3C!-- Disc --%3E%3Ccircle cx='88' cy='88' r='12'/%3E%3Ccircle cx='88' cy='88' r='4'/%3E%3C/g%3E%3C/svg%3E"); 
-            background-attachment: fixed; color: #e0e6ed; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-        }
+        body, html { margin: 0; padding: 0; min-height: 100%; font-family: 'Segoe UI', Roboto, sans-serif; background-color: #050608; background-image: radial-gradient(circle at 15% 20%, rgba(82, 181, 75, 0.12) 0%, transparent 50%), radial-gradient(circle at 85% 80%, rgba(0, 242, 254, 0.12) 0%, transparent 50%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg stroke='rgba(255,255,255,0.035)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3C!-- Play --%3E%3Ccircle cx='30' cy='30' r='12'/%3E%3Cpolygon points='28,25 28,35 36,30'/%3E%3C!-- Film --%3E%3Crect x='80' y='20' width='18' height='24' rx='2'/%3E%3Cpath d='M80 26h18M80 32h18M80 38h18M84 20v24M94 20v24'/%3E%3C!-- TV --%3E%3Crect x='25' y='80' width='22' height='16' rx='2'/%3E%3Cpath d='M31 80l5-5l5 5'/%3E%3Cpath d='M31 96h10'/%3E%3C!-- Disc --%3E%3Ccircle cx='88' cy='88' r='12'/%3E%3Ccircle cx='88' cy='88' r='4'/%3E%3C/g%3E%3C/svg%3E"); background-attachment: fixed; color: #e0e6ed; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .glass-panel { background: rgba(15, 18, 25, 0.65); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(0, 242, 254, 0.15); border-radius: 24px; padding: 40px 30px; width: 85%; max-width: 400px; box-shadow: 0 25px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0,242,254,0.05); text-align: center; position: relative; }
         .admin-panel { max-width: 900px; padding: 30px; margin: 40px 0; }
         h1 { margin: 0 0 20px 0; font-size: 28px; font-weight: 700; letter-spacing: 2px; background: linear-gradient(135deg, #fff, #00f2fe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -44,7 +33,6 @@ export default {
         .nav-links a { color: #00f2fe; text-decoration: none; margin: 0 10px; transition: 0.3s; }
         .nav-links a:hover { text-shadow: 0 0 10px rgba(0,242,254,0.8); }
         
-        /* 弹窗与表格 */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 100; align-items: center; justify-content: center; }
         .modal-content { background: #12151e; border: 1px solid #00f2fe; border-radius: 20px; padding: 30px; width: 90%; max-width: 450px; text-align: left; }
         .modal-content h3 { margin-top: 0; color: #00f2fe; }
@@ -54,9 +42,9 @@ export default {
         .copy-btn:hover { background: #00f2fe; color: #000; }
         .table-container { width: 100%; overflow-x: auto; margin-top: 20px; text-align: left; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th, td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        th, td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
         th { color: #00f2fe; font-weight: normal; }
-        .icon-preview { width: 30px; height: 30px; border-radius: 8px; object-fit: cover; vertical-align: middle; margin-right: 10px; }
+        .icon-preview { width: 30px; height: 30px; border-radius: 8px; object-fit: cover; vertical-align: middle; margin-right: 10px; background: rgba(255,255,255,0.05); }
       </style>
     `;
 
@@ -67,7 +55,6 @@ export default {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>专用图标上传</title>${sharedCSS}</head><body>
           <div class="glass-panel">
               <h1>Icon Upload</h1>
-              <!-- 文案已修改 -->
               <div class="badge guest">专用图标</div>
               <form id="uploadForm">
                   <div class="input-group">
@@ -86,7 +73,6 @@ export default {
               </div>
           </div>
 
-          <!-- 成功弹窗 -->
           <div class="modal" id="successModal">
               <div class="modal-content">
                   <h3>✅ 上传成功！</h3>
@@ -148,7 +134,6 @@ export default {
     if (request.method === 'GET' && path === '/admin') {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>管理员控制台</title>${sharedCSS}</head><body>
           
-          <!-- 登入框 -->
           <div class="glass-panel admin-panel" id="loginBox">
               <h1>Admin Login</h1>
               <div class="input-group">
@@ -158,9 +143,7 @@ export default {
               <div class="nav-links"><a href="/">返回游客上传</a></div>
           </div>
 
-          <!-- 控制台主界面 -->
           <div class="glass-panel admin-panel" id="dashboard" style="display:none; width: 95%;">
-              <!-- 顶部标题与退出按钮 -->
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px;">
                   <div style="text-align: left;">
                       <h1 style="margin: 0; font-size: 24px;">Admin Dashboard</h1>
@@ -171,7 +154,6 @@ export default {
               
               <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap: 30px;">
                   
-                  <!-- 左侧：统一风格的管理员上传 -->
                   <div style="flex:1; min-width: 260px; background: rgba(0,0,0,0.3); padding: 25px; border-radius: 16px;">
                       <h3 style="margin-top:0; color:#00f2fe; font-size:16px; text-align:left;">⚡ 管理员直传</h3>
                       <form id="adminUploadForm">
@@ -187,7 +169,6 @@ export default {
                       </div>
                   </div>
                   
-                  <!-- 右侧：数据统计 -->
                   <div style="flex:2; min-width: 320px; text-align:left;">
                       <h3 style="margin-top:0; color:#00f2fe; font-size:16px;">
                           🗂️ 图标数据库管理 
@@ -244,28 +225,45 @@ export default {
                   data.forEach(item => {
                       const tr = document.createElement('tr');
                       const roleTag = item.role === 'admin' ? '<span style="color:#00f2fe;font-weight:bold;">Admin</span>' : '<span style="color:#aaa">Guest</span>';
+                      
                       tr.innerHTML = \`
                           <td><img src="\${item.url}" class="icon-preview" loading="lazy"></td>
                           <td><code>\${item.name}</code></td>
                           <td>\${roleTag}</td>
-                          <td><button class="submit-btn danger" onclick="deleteIcon('\${item.key}')">删除</button></td>
+                          <td><button class="submit-btn danger" onclick="deleteIcon('\${item.key}', this)">删除</button></td>
                       \`;
                       tbody.appendChild(tr);
                   });
               }
 
-              async function deleteIcon(key) {
-                  if(!confirm('确定要彻底删除该图标吗？JSON 订阅中也会同步移除。')) return;
+              async function deleteIcon(key, btnElement) {
+                  if(!confirm('确定要彻底删除该图标吗？\\n(如果关联了TG群通知，也会同步撤回该消息)')) return;
+                  
+                  btnElement.disabled = true;
+                  btnElement.innerText = '删除中...';
+
                   const res = await fetch('/api/admin/delete', {
                       method: 'POST',
                       headers: { 'Authorization': pwd, 'Content-Type': 'application/json' },
                       body: JSON.stringify({ key })
                   });
-                  if(res.ok) { alert('✅ 删除成功'); loadList(); }
-                  else { alert('❌ 删除失败'); }
+                  
+                  if(res.ok) { 
+                      const row = btnElement.closest('tr');
+                      row.style.opacity = '0';
+                      setTimeout(() => {
+                          row.remove();
+                          if(document.getElementById('iconListBody').children.length === 0) {
+                              document.getElementById('iconListBody').innerHTML = '<tr><td colspan="4" style="text-align:center; color:#888;">数据库空空如也</td></tr>';
+                          }
+                      }, 300);
+                  } else { 
+                      alert('❌ 删除失败'); 
+                      btnElement.disabled = false;
+                      btnElement.innerText = '删除';
+                  }
               }
 
-              // 管理员页面的文件选择逻辑
               const adminFileInput = document.getElementById('admin-file-upload');
               const adminDisplay = document.getElementById('admin-file-name-display');
               adminFileInput.addEventListener('change', e => {
@@ -273,7 +271,6 @@ export default {
                   adminDisplay.style.borderColor = e.target.files.length > 0 ? '#00f2fe' : 'rgba(255,255,255,0.2)';
               });
 
-              // 管理员表单提交
               document.getElementById('adminUploadForm').addEventListener('submit', async e => {
                   e.preventDefault();
                   const btn = document.getElementById('adminSubmitBtn');
@@ -286,7 +283,7 @@ export default {
                           const data = await res.json();
                           alert('✅ 上传成功！\\n图片直链: ' + data.imgUrl);
                           e.target.reset(); adminDisplay.textContent = '选择图片 (PNG/JPG)';
-                          loadList(); // 自动刷新列表
+                          loadList(); 
                       } else { alert('❌ 上传失败'); }
                   } catch(err) { alert('❌ 网络错误'); } finally { btn.textContent = '上传至管理区'; btn.disabled = false; }
               });
@@ -296,7 +293,22 @@ export default {
     }
 
     // ==========================================
-    // 📡 接口 1：生成 JSON 订阅 (Emby 规范数组格式)
+    // ⚙️ 辅助函数：解析 KV 里的值 (兼容旧版只有字符串的情况)
+    // ==========================================
+    function parseKvValue(rawValue) {
+        if (!rawValue) return { url: null, msgId: null, chatId: null };
+        try {
+            // 尝试以 JSON 格式解析新数据
+            const parsed = JSON.parse(rawValue);
+            return { url: parsed.url, msgId: parsed.msgId, chatId: parsed.chatId };
+        } catch (e) {
+            // 如果报错，说明是旧版的数据（只有 http 链接字符串）
+            return { url: rawValue, msgId: null, chatId: null };
+        }
+    }
+
+    // ==========================================
+    // 📡 接口 1：生成 JSON 订阅 
     // ==========================================
     if (request.method === 'GET' && (path === '/guest.json' || path === '/admin.json')) {
       const isGuest = path === '/guest.json';
@@ -308,9 +320,13 @@ export default {
         let iconArray = [];
         
         for (const keyObj of list.keys) {
-          const value = await env.ICON_KV.get(keyObj.name);
-          const cleanName = keyObj.name.replace(prefix, '');
-          iconArray.push({ "name": cleanName, "url": value });
+          const rawValue = await env.ICON_KV.get(keyObj.name);
+          const { url } = parseKvValue(rawValue);
+          
+          if (url) {
+              const cleanName = keyObj.name.replace(prefix, '');
+              iconArray.push({ "name": cleanName, "url": url });
+          }
         }
         
         const finalJson = { "name": libName, "description": "基于 Cloudflare Workers 自建的图标分发库", "icons": iconArray };
@@ -323,7 +339,7 @@ export default {
     }
 
     // ==========================================
-    // 📤 接口 2：处理上传 (Web端：区分角色)
+    // 📤 接口 2：处理上传 (记录 TG 的 Message ID)
     // ==========================================
     if (request.method === 'POST' && path === '/api/upload') {
       const role = url.searchParams.get('role') || 'guest';
@@ -343,21 +359,35 @@ export default {
 
       const publicUrl = `${env.R2_PUBLIC_URL}/${r2Path}`;
       const kvKey = `${role}:${iconName}`;
-      await env.ICON_KV.put(kvKey, publicUrl);
 
-      if (role === 'guest') {
-        const msg = `🔔 <b>收到新专用图标上传</b>\n名称: <code>${iconName}</code>\n链接: ${publicUrl}`;
-        fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+      // 发送通知，并获取返回的 message_id
+      let tgMsgId = null;
+      let tgChatId = null;
+      const roleName = role === 'admin' ? '管理员后台' : '专用图标区';
+      const msg = `🔔 <b>来自[${roleName}]的图标上传</b>\n名称: <code>${iconName}</code>\n链接: ${publicUrl}`;
+      
+      try {
+        const tgRes = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ chat_id: env.ADMIN_CHAT_ID, text: msg, parse_mode: 'HTML' })
-        }).catch(()=>{}); 
-      }
+        });
+        if (tgRes.ok) {
+            const tgData = await tgRes.json();
+            tgMsgId = tgData.result.message_id;
+            tgChatId = tgData.result.chat.id;
+        }
+      } catch (e) { console.log("TG通知发送失败", e); }
+
+      // 【重点变更】：将 URL 和 TG消息ID 封装成 JSON 存入 KV
+      const kvValueObj = { url: publicUrl, msgId: tgMsgId, chatId: tgChatId };
+      await env.ICON_KV.put(kvKey, JSON.stringify(kvValueObj));
 
       return Response.json({ success: true, iconName: iconName, imgUrl: publicUrl, jsonUrl: `${hostUrl}/${role}.json` });
     }
 
     // ==========================================
-    // 🛠️ 接口 3：管理员 API (获取列表 & 删除)
+    // 🛠️ 接口 3：管理员 API (获取列表 & 撤回消息功能)
     // ==========================================
     if (request.method === 'GET' && path === '/api/admin/list') {
       if (request.headers.get('Authorization') !== env.ADMIN_PASSWORD) return new Response('Unauthorized', { status: 401 });
@@ -365,13 +395,16 @@ export default {
       const list = await env.ICON_KV.list();
       let result = [];
       for (const keyObj of list.keys) {
-        const url = await env.ICON_KV.get(keyObj.name);
+        const rawValue = await env.ICON_KV.get(keyObj.name);
+        const { url } = parseKvValue(rawValue);
+        
         const role = keyObj.name.startsWith('admin:') ? 'admin' : 'guest';
         const cleanName = keyObj.name.replace(`${role}:`, '');
-        result.push({ key: keyObj.name, name: cleanName, role: role, url: url });
+        if(url) result.push({ key: keyObj.name, name: cleanName, role: role, url: url });
       }
       result.sort((a, b) => a.role.localeCompare(b.role));
-      return Response.json(result);
+      
+      return new Response(JSON.stringify(result), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }});
     }
 
     if (request.method === 'POST' && path === '/api/admin/delete') {
@@ -379,18 +412,31 @@ export default {
       
       const body = await request.json();
       const key = body.key; 
-      const fileUrl = await env.ICON_KV.get(key);
+      const rawValue = await env.ICON_KV.get(key);
       
-      if (fileUrl) {
-        const r2Path = fileUrl.replace(`${env.R2_PUBLIC_URL}/`, '');
-        await env.ICON_R2.delete(r2Path);
+      if (rawValue) {
+        const { url, msgId, chatId } = parseKvValue(rawValue);
+        
+        if (url) {
+            const r2Path = url.replace(`${env.R2_PUBLIC_URL}/`, '');
+            await env.ICON_R2.delete(r2Path);
+        }
         await env.ICON_KV.delete(key);
+
+        // 【自动撤回机制】：如果存有消息 ID，就调用 Telegram API 撤回群通知！
+        if (msgId && chatId) {
+            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/deleteMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: chatId, message_id: msgId })
+            }).catch(() => {}); // 撤回失败(比如超过48小时)也不抛出错误
+        }
       }
       return new Response('Deleted', { status: 200 });
     }
 
     // ==========================================
-    // 🤖 接口 4：TG Bot Webhook 上传 (归入 admin)
+    // 🤖 接口 4：TG Bot Webhook 上传
     // ==========================================
     if (request.method === 'POST' && path === `/webhook/tg/${env.TG_BOT_TOKEN}`) {
       const update = await request.json();
@@ -409,14 +455,23 @@ export default {
 
           const r2Path = `tg/${iconName}.png`;
           await env.ICON_R2.put(r2Path, imageBuffer);
-          
           const publicUrl = `${env.R2_PUBLIC_URL}/${r2Path}`;
-          await env.ICON_KV.put(`admin:${iconName}`, publicUrl);
 
-          await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
+          // 发送入库回复通知，并获取 reply_msg_id
+          let replyMsgId = null;
+          const tgRes = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: chatId, text: `✅ 图标 [${iconName}] 已入库并更新至 Admin JSON！` })
           });
+          if (tgRes.ok) {
+              const tgData = await tgRes.json();
+              replyMsgId = tgData.result.message_id;
+          }
+
+          // 将数据和回执ID存入 KV
+          const kvValueObj = { url: publicUrl, msgId: replyMsgId, chatId: chatId };
+          await env.ICON_KV.put(`admin:${iconName}`, JSON.stringify(kvValueObj));
+
         } catch (err) {
           await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
