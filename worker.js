@@ -586,7 +586,7 @@ export default {
                   chat_id: primaryTargetId, 
                   text: `🔔 <b>来自[${roleName}]的图标上传</b>\n名称: <code>${iconName}</code>\n链接: ${publicUrl}`, 
                   parse_mode: 'HTML',
-                  disable_web_page_preview: true, // 禁用网页端上传推送的链接预览
+                  // 移除 disable_web_page_preview，让 TG 自动显示图片预览
                   reply_markup: {
                       inline_keyboard: [[{ text: "🗑️ 从数据库中彻底删除", callback_data: `del:${role}:${iconName}` }]]
                   }
@@ -655,7 +655,6 @@ export default {
       const update = await request.json();
       const allowedAdminIds = env.ADMIN_CHAT_ID ? String(env.ADMIN_CHAT_ID).split(',').map(s => s.trim()) :[];
 
-      // 菜单文本动态提取 hostUrl，完美适配任何部署者的自定义域名或默认域名！
       const menuText = `👋 <b>欢迎使用专属图标管理机器人</b>
 
 🖼️ <b>如何上传？</b>
@@ -716,7 +715,7 @@ ${hostUrl}/admin
               body: JSON.stringify({ 
                   chat_id: chatRoomId, message_id: cb.message.message_id, 
                   text: menuText, parse_mode: 'HTML', 
-                  disable_web_page_preview: true, // 禁止生成烦人的网页大图预览
+                  disable_web_page_preview: true, // 保留：禁止生成欢迎菜单的网页大图预览
                   reply_markup: menuMarkup 
               })
             });
@@ -794,7 +793,7 @@ ${hostUrl}/admin
                   chat_id: chatRoomId, 
                   text: menuText, 
                   parse_mode: 'HTML', 
-                  disable_web_page_preview: true, // 发送欢迎语时同样取消网页预览图
+                  disable_web_page_preview: true, // 保留：发送欢迎语时同样取消网页预览图
                   reply_markup: menuMarkup 
               })
            });
@@ -828,7 +827,7 @@ ${hostUrl}/admin
                 await env.ICON_KV.delete(kvKey);
                 await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
                   method: 'POST', headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ chat_id: chatRoomId, text: `✅ 成功从数据库彻底删除图标 [${kvKey}]！` })
+                  body: JSON.stringify({ chat_id: chatRoomId, text: `✅ 成功从数据库彻底删除图标[${kvKey}]！` })
                 });
             } else {
                 await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
@@ -864,7 +863,7 @@ ${hostUrl}/admin
                 chat_id: chatRoomId, 
                 text: `✅ <b>上传成功</b>\n名称: <code>${iconName}</code>\n直链: ${publicUrl}\n\n<i>(图标已自动归类至 Admin 库)</i>`, 
                 parse_mode: 'HTML',
-                disable_web_page_preview: true,
+                // 移除 disable_web_page_preview，让 TG 自动显示图片预览
                 reply_markup: {
                   inline_keyboard: [[{ text: "🗑️ 从数据库中彻底删除", callback_data: `del:${role}:${iconName}` }]]
                 }
