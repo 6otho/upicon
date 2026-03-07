@@ -77,6 +77,9 @@ export default {
       </style>
     `;
 
+    // ==========================================
+    // 🌐 路由 1：游客首页
+    // ==========================================
     if (request.method === 'GET' && path === '/') {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>专用图标上传</title>${sharedCSS}</head><body>
           <div class="glass-panel">
@@ -156,6 +159,9 @@ export default {
       return new Response(html, { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
     }
 
+    // ==========================================
+    // 🖼️ 路由：游客图库
+    // ==========================================
     if (request.method === 'GET' && path === '/gallery') {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>游客图库</title>${sharedCSS}</head><body>
           <div class="glass-panel" id="loginBox">
@@ -163,7 +169,7 @@ export default {
               <div class="input-group">
                   <input type="password" id="guestPwd" placeholder="请输入游客访问密码" onkeydown="if(event.key==='Enter') login()">
               </div>
-              <button class="submit-btn gallery-btn" onclick="login()">进入画廊</button>
+              <button class="submit-btn gallery-btn" onclick="login()">进入图库</button>
               <div class="nav-links"><a href="/">返回首页</a></div>
           </div>
 
@@ -173,7 +179,7 @@ export default {
                   
                   <div style="display:flex; gap:10px;">
                       <a href="${hostUrl}/guest.json" target="_blank" class="submit-btn outline" style="text-decoration:none; border-color:#4a90e2; color:#4a90e2; line-height:16px;">📄 查看游客 JSON</a>
-                      <button class="submit-btn outline" style="width: auto; margin: 0; border-color: rgba(255,255,255,0.3); color: white;" onclick="logout()">退出画廊</button>
+                      <button class="submit-btn outline" style="width: auto; margin: 0; border-color: rgba(255,255,255,0.3); color: white;" onclick="logout()">退出图库</button>
                   </div>
               </div>
               
@@ -264,6 +270,9 @@ export default {
       return new Response(html, { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
     }
 
+    // ==========================================
+    // 🛡️ 路由 3：管理员面板
+    // ==========================================
     if (request.method === 'GET' && path === '/admin') {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>管理员控制台</title>${sharedCSS}</head><body>
           
@@ -510,7 +519,7 @@ export default {
     }
 
     // ==========================================
-    // 🖼️ 接口 2：获取游客画廊数据
+    // 🖼️ 接口 2：获取游客图库数据
     // ==========================================
     if (request.method === 'GET' && path === '/api/guest/list') {
       if (request.headers.get('Authorization') !== env.GUEST_PASSWORD) return new Response('Unauthorized', { status: 401 });
@@ -529,7 +538,7 @@ export default {
     }
 
     // ==========================================
-    // 📤 接口 3：处理网页端上传 (并发送带有删除按钮的 TG 通知)
+    // 📤 接口 3：处理网页端上传
     // ==========================================
     if (request.method === 'POST' && path === '/api/upload') {
       const role = url.searchParams.get('role') || 'guest';
@@ -554,7 +563,6 @@ export default {
       let tgChatId = null;
       const roleName = role === 'admin' ? '管理员后台' : '专用图标区';
       
-      // 提取第一个 ID 作为网页上传默认通知的目标通道 (防止使用群组和个人的逗号字符串导致报错)
       const primaryTargetId = env.ADMIN_CHAT_ID ? String(env.ADMIN_CHAT_ID).split(',')[0].trim() : null;
 
       try {
@@ -566,6 +574,7 @@ export default {
                   chat_id: primaryTargetId, 
                   text: `🔔 <b>来自[${roleName}]的图标上传</b>\n名称: <code>${iconName}</code>\n链接: ${publicUrl}`, 
                   parse_mode: 'HTML',
+                  disable_web_page_preview: true, // 禁用网页端上传推送的链接预览
                   reply_markup: {
                       inline_keyboard: [[{ text: "🗑️ 从数据库中彻底删除", callback_data: `del:${role}:${iconName}` }]]
                   }
@@ -628,23 +637,93 @@ export default {
     }
 
     // ==========================================
-    // 🤖 接口 5：TG Bot 深度交互引擎 (多 ID 鉴权支持)
+    // 🤖 接口 5：TG Bot 深度交互引擎 (修复按钮闪烁 & 取消预览)
     // ==========================================
     if (request.method === 'POST' && path === `/webhook/tg/${env.TG_BOT_TOKEN}`) {
       const update = await request.json();
-      
-      // 获取配置中允许的全部 Admin ID 列表
       const allowedAdminIds = env.ADMIN_CHAT_ID ? String(env.ADMIN_CHAT_ID).split(',').map(s => s.trim()) :[];
 
-      // --- 1. 处理内联按钮回调 (点击删除图标) ---
+      const menuText = `👋 <b>欢迎使用专属图标管理机器人</b>
+
+🖼️ <b>如何上传？</b>
+直接发送一张图片给我，并在发送时的<b>“添加文字说明 (Caption)”</b>处填写图标名称（例如 <code>wechat</code>）。
+
+🌐 <b>网页管理控制台：</b>
+https://upicon.iknn.eu.org/admin
+
+🔗 <b>订阅 JSON 链接：</b>
+• <b>游客订阅：</b> https://upicon.iknn.eu.org/guest.json
+• <b>管理订阅：</b> https://upicon.iknn.eu.org/admin.json`;
+
+      const menuMarkup = {
+          inline_keyboard: [[
+                  { text: "📊 查看后台数据", callback_data: "stats" },
+                  { text: "🗑️ 快捷删除指令", callback_data: "help_del" }
+              ]
+          ]
+      };
+
+      // --- 1. 处理内联按钮回调 ---
       if (update.callback_query) {
         const cb = update.callback_query;
         const data = cb.data;
-        const chatRoomId = String(cb.message.chat.id); // 消息所在的聊天室ID
-        const userId = String(cb.from.id); // 点击按钮的人的ID
+        const chatRoomId = String(cb.message.chat.id);
+        const userId = String(cb.from.id);
 
-        // 多 ID 鉴权拦截：聊天室ID 或者 操作人ID 只要有一个在白名单内，就放行
         if (allowedAdminIds.length > 0 && !allowedAdminIds.includes(chatRoomId) && !allowedAdminIds.includes(userId)) {
+            return new Response('OK');
+        }
+
+        if (data === 'stats') {
+            const list = await env.ICON_KV.list();
+            let adminCount = 0, guestCount = 0;
+            for (const keyObj of list.keys) {
+                if (keyObj.name.startsWith('admin:')) adminCount++;
+                else if (keyObj.name.startsWith('guest:')) guestCount++;
+            }
+            const statsText = `📊 <b>后台数据库实时统计</b>\n\n🛡️ Admin 图标数：<code>${adminCount}</code> 个\n🌍 Guest 图标数：<code>${guestCount}</code> 个\n\n📦 总计收录：<code>${adminCount + guestCount}</code> 个图标\n\n<i>数据已同步至最新。</i>`;
+            
+            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/editMessageText`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: chatRoomId, message_id: cb.message.message_id, text: statsText, parse_mode: 'HTML',
+                reply_markup: { inline_keyboard: [[{ text: "🔙 返回主菜单", callback_data: "menu" }]] }
+              })
+            });
+            // 修复：补全 headers 解决按钮闪烁转圈圈问题
+            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/answerCallbackQuery`, { 
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ callback_query_id: cb.id }) 
+            });
+            return new Response('OK');
+        }
+
+        if (data === 'menu') {
+            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/editMessageText`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                  chat_id: chatRoomId, message_id: cb.message.message_id, 
+                  text: menuText, parse_mode: 'HTML', 
+                  disable_web_page_preview: true, // 修复：禁止生成烦人的网页大图预览
+                  reply_markup: menuMarkup 
+              })
+            });
+            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/answerCallbackQuery`, { 
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ callback_query_id: cb.id }) 
+            });
+            return new Response('OK');
+        }
+
+        if (data === 'help_del') {
+            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/answerCallbackQuery`, {
+             method: 'POST', headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ 
+                 callback_query_id: cb.id, 
+                 text: "💡 删除教学：\n\n请直接在聊天框向我发送指令：\n/del 图标名称\n\n例如，要彻底删除 wechat 图标，请发送：\n/del wechat", 
+                 show_alert: true 
+             })
+            });
             return new Response('OK');
         }
 
@@ -663,14 +742,9 @@ export default {
             }
             await env.ICON_KV.delete(kvKey);
             
-            // 变更消息本身，移除按钮并修改提示文字
             await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/editMessageText`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                chat_id: cb.message.chat.id,
-                message_id: cb.message.message_id,
-                text: `🗑️ 图标 [${iconName}] 已通过机器人撤回并彻底删除。`
-              })
+              body: JSON.stringify({ chat_id: cb.message.chat.id, message_id: cb.message.message_id, text: `🗑️ 图标 [${iconName}] 已通过机器人撤回并彻底删除。` })
             });
           } else {
              await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/editMessageText`, {
@@ -678,11 +752,9 @@ export default {
               body: JSON.stringify({ chat_id: cb.message.chat.id, message_id: cb.message.message_id, text: `⚠️ 图标 [${iconName}] 不存在或已被删除。` })
             });
           }
-          
-          // 给机器人回复弹窗，消除转圈圈 loading 状态
-          await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/answerCallbackQuery`, {
-             method: 'POST', headers: { 'Content-Type': 'application/json' },
-             body: JSON.stringify({ callback_query_id: cb.id, text: "清理完成！" })
+          await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/answerCallbackQuery`, { 
+              method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+              body: JSON.stringify({ callback_query_id: cb.id, text: "清理完成！" }) 
           });
         }
         return new Response('OK');
@@ -693,23 +765,68 @@ export default {
         const chatRoomId = String(update.message.chat.id);
         const userId = String(update.message.from.id);
         
-        // 多 ID 鉴权拦截
         if (allowedAdminIds.length > 0 && !allowedAdminIds.includes(chatRoomId) && !allowedAdminIds.includes(userId)) {
             await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ chat_id: chatRoomId, text: "⛔ 你没有权限使用此图标管理机器人。" })
+              body: JSON.stringify({ chat_id: chatRoomId, text: "⛔ 权限不足：你不在管理员白名单中。" })
             });
             return new Response('OK');
         }
 
+        const msgText = update.message.text || '';
+
         // [菜单指令处理]
-        if (update.message.text === '/start' || update.message.text === '/help') {
-           const helpMsg = `👋 <b>欢迎使用专属图标管理机器人</b>\n\n🖼️ <b>如何上传？</b>\n直接发送一张图片给我，并在发送时的<b>“添加文字说明 (Caption)”</b>处填写图标名称（例如 <code>wechat</code>）。\n\n🗑️ <b>如何删除？</b>\n无论是机器人上传还是网页上传，只要消息下方带有【🗑️ 从数据库中彻底删除】按钮，直接点击即可销毁图标并更新 JSON。\n\n🌐 <b>网页端管理控制台</b>\n${hostUrl}/admin`;
+        if (msgText === '/start' || msgText === '/help') {
            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ chat_id: chatRoomId, text: helpMsg, parse_mode: 'HTML' })
+              body: JSON.stringify({ 
+                  chat_id: chatRoomId, 
+                  text: menuText, 
+                  parse_mode: 'HTML', 
+                  disable_web_page_preview: true, // 修复：发送欢迎语时同样取消网页预览图
+                  reply_markup: menuMarkup 
+              })
            });
            return new Response('OK');
+        }
+
+        // [文字快捷删除指令处理]
+        if (msgText.startsWith('/del ')) {
+            const targetName = msgText.replace('/del ', '').trim();
+            if (!targetName) return new Response('OK');
+
+            let kvKey = targetName.includes(':') ? targetName : null;
+            let rawValue = null;
+
+            if (kvKey) {
+                rawValue = await env.ICON_KV.get(kvKey);
+            } else {
+                kvKey = `admin:${targetName}`;
+                rawValue = await env.ICON_KV.get(kvKey);
+                if (!rawValue) {
+                    kvKey = `guest:${targetName}`;
+                    rawValue = await env.ICON_KV.get(kvKey);
+                }
+            }
+
+            if (rawValue) {
+                const { url } = parseKvValue(rawValue);
+                if (url) {
+                  const r2Path = url.replace(`${env.R2_PUBLIC_URL}/`, '');
+                  await env.ICON_R2.delete(r2Path);
+                }
+                await env.ICON_KV.delete(kvKey);
+                await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ chat_id: chatRoomId, text: `✅ 成功从数据库彻底删除图标 [${kvKey}]！` })
+                });
+            } else {
+                await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ chat_id: chatRoomId, text: `⚠️ 找不到图标 [${targetName}]，可能已被删除或名称错误。` })
+                });
+            }
+            return new Response('OK');
         }
 
         // [机器端图片直传处理]
@@ -732,13 +849,13 @@ export default {
             const publicUrl = `${env.R2_PUBLIC_URL}/${r2Path}`;
 
             let replyMsgId = null;
-            // 发送成功通知并附带内联删除按钮
             const tgRes = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ 
                 chat_id: chatRoomId, 
                 text: `✅ <b>上传成功</b>\n名称: <code>${iconName}</code>\n直链: ${publicUrl}\n\n<i>(图标已自动归类至 Admin 库)</i>`, 
                 parse_mode: 'HTML',
+                disable_web_page_preview: true, // 上传成功的提示也取消预览，保持版面干净
                 reply_markup: {
                   inline_keyboard: [[{ text: "🗑️ 从数据库中彻底删除", callback_data: `del:${role}:${iconName}` }]]
                 }
