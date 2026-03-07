@@ -28,12 +28,10 @@ export default {
         .file-upload-label { display: block; width: 100%; padding: 15px 20px; background: rgba(255,255,255,0.03); border: 1.5px dashed rgba(255,255,255,0.2); border-radius: 30px; color: rgba(255,255,255,0.5); font-size: 15px; cursor: pointer; text-align: left; transition: all 0.3s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 20px;}
         .file-upload-label:hover { background: rgba(0,242,254,0.05); border-color: #00f2fe; color: white; }
         
-        /* 默认基础提交按钮 (明亮青蓝色渐变) */
         .submit-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #050608; border: none; border-radius: 30px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
         .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,242,254,0.4); }
         .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; box-shadow: none; }
         
-        /* 游客图库专属按钮样式 (亮彩宝石深蓝渐变 - 光泽感十足) */
         .submit-btn.gallery-btn { background: linear-gradient(135deg, #0052d4 0%, #4364f7 100%); box-shadow: 0 5px 15px rgba(67, 100, 247, 0.3); color: #fff;}
         .submit-btn.gallery-btn:hover { background: linear-gradient(135deg, #4364f7 0%, #6fb1fc 100%); box-shadow: 0 8px 25px rgba(67, 100, 247, 0.6); }
         
@@ -42,16 +40,13 @@ export default {
         .submit-btn.outline { background: transparent; border: 1px solid #00f2fe; color: #00f2fe; padding: 6px 15px; border-radius: 20px; font-size: 13px; font-weight: normal; width: auto; margin: 0;}
         .submit-btn.outline:hover { background: rgba(0,242,254,0.1); box-shadow: 0 0 10px rgba(0,242,254,0.3); }
         
-        /* 导航链接 (居中) */
         .nav-links { margin-top: 20px; font-size: 13px; text-align: center; }
         .nav-links a { color: #00f2fe; text-decoration: none; margin: 0 10px; transition: 0.3s; }
         .nav-links a:hover { text-shadow: 0 0 10px rgba(0,242,254,0.8); }
         
-        /* 管理员面板排版 */
         .dashboard-layout { display: flex; justify-content: space-between; align-items: flex-start; gap: 30px; width: 100%; }
         .dashboard-layout > div { min-width: 0; overflow: hidden; }
         
-        /* 表格防溢出 */
         .table-container { width: 100%; overflow-x: auto; text-align: left; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 350px; }
         th, td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
@@ -61,7 +56,6 @@ export default {
         .icon-preview { width: 35px; height: 35px; border-radius: 8px; object-fit: cover; vertical-align: middle; margin-right: 10px; background: rgba(255,255,255,0.05); cursor: zoom-in; border: 1px solid rgba(255,255,255,0.1); transition: transform 0.2s; }
         .icon-preview:hover { transform: scale(1.1); border-color: #00f2fe; }
 
-        /* 弹窗样式 */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 100; align-items: center; justify-content: center; }
         .modal-content { background: #12151e; border: 1px solid #00f2fe; border-radius: 20px; padding: 25px; width: 90%; max-width: 420px; text-align: left; }
         .copy-box { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -72,21 +66,17 @@ export default {
         .image-viewer img { max-width: 90vw; max-height: 80vh; object-fit: contain; border-radius: 12px; box-shadow: 0 0 30px rgba(0, 242, 254, 0.3); border: 2px solid rgba(255,255,255,0.1); animation: zoomIn 0.3s ease; }
         @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        /* 📱 移动端响应式 (深度优化管理员面板与表格) */
         @media (max-width: 768px) {
             .dashboard-layout { flex-direction: column; gap: 20px; }
-            .dashboard-layout > div { width: 100%; } /* 强制占满手机屏幕宽度防压缩 */
+            .dashboard-layout > div { width: 100%; } 
             .glass-panel { width: 95%; padding: 25px 15px; margin: 15px auto; }
             .wide-panel { padding: 20px 10px; }
             h1 { font-size: 24px; }
-            th, td { padding: 10px 5px; font-size: 12px; } /* 缩小移动端表格留白 */
+            th, td { padding: 10px 5px; font-size: 12px; } 
         }
       </style>
     `;
 
-    // ==========================================
-    // 🌐 路由 1：游客首页 (游客上传界面)
-    // ==========================================
     if (request.method === 'GET' && path === '/') {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>专用图标上传</title>${sharedCSS}</head><body>
           <div class="glass-panel">
@@ -166,9 +156,6 @@ export default {
       return new Response(html, { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
     }
 
-    // ==========================================
-    // 🖼️ 路由：游客图库
-    // ==========================================
     if (request.method === 'GET' && path === '/gallery') {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>游客图库</title>${sharedCSS}</head><body>
           <div class="glass-panel" id="loginBox">
@@ -176,7 +163,7 @@ export default {
               <div class="input-group">
                   <input type="password" id="guestPwd" placeholder="请输入游客访问密码" onkeydown="if(event.key==='Enter') login()">
               </div>
-              <button class="submit-btn gallery-btn" onclick="login()">进入图库</button>
+              <button class="submit-btn gallery-btn" onclick="login()">进入画廊</button>
               <div class="nav-links"><a href="/">返回首页</a></div>
           </div>
 
@@ -186,7 +173,7 @@ export default {
                   
                   <div style="display:flex; gap:10px;">
                       <a href="${hostUrl}/guest.json" target="_blank" class="submit-btn outline" style="text-decoration:none; border-color:#4a90e2; color:#4a90e2; line-height:16px;">📄 查看游客 JSON</a>
-                      <button class="submit-btn outline" style="width: auto; margin: 0; border-color: rgba(255,255,255,0.3); color: white;" onclick="logout()">退出图库</button>
+                      <button class="submit-btn outline" style="width: auto; margin: 0; border-color: rgba(255,255,255,0.3); color: white;" onclick="logout()">退出画廊</button>
                   </div>
               </div>
               
@@ -257,7 +244,6 @@ export default {
                   document.getElementById('viewerImage').src = '';
               }
               
-              // 增强版移动端防拦截复制方案
               function copyLink(text) {
                   if (navigator.clipboard && window.isSecureContext) {
                       navigator.clipboard.writeText(text).then(() => alert('已复制图片直链！')).catch(() => fallbackCopy(text));
@@ -270,12 +256,7 @@ export default {
                   input.value = text;
                   document.body.appendChild(input);
                   input.select();
-                  try {
-                      document.execCommand('copy');
-                      alert('已复制图片直链！');
-                  } catch(e) {
-                      alert('复制失败，请手动复制');
-                  }
+                  try { document.execCommand('copy'); alert('已复制图片直链！'); } catch(e) { alert('复制失败，请手动复制'); }
                   document.body.removeChild(input);
               }
           </script>
@@ -283,9 +264,6 @@ export default {
       return new Response(html, { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
     }
 
-    // ==========================================
-    // 🛡️ 路由 3：管理员面板 (查看与编辑)
-    // ==========================================
     if (request.method === 'GET' && path === '/admin') {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>管理员控制台</title>${sharedCSS}</head><body>
           
@@ -394,7 +372,6 @@ export default {
                           <td><code>\${item.name}</code></td>
                           <td>\${roleTag}</td>
                           <td>
-                              <!-- 加入flex容器防移动端折叠 -->
                               <div style="display:flex; gap:6px; flex-wrap:nowrap;">
                                   <button class="submit-btn outline" style="padding: 5px 8px; margin: 0; min-width: 44px;" onclick="copyLink('\${item.url}')">复制</button>
                                   <button class="submit-btn danger" style="padding: 5px 8px; margin: 0; min-width: 44px;" onclick="deleteIcon('\${item.key}', this)">删除</button>
@@ -414,7 +391,6 @@ export default {
                   document.getElementById('viewerImage').src = '';
               }
               
-              // 增强版移动端防拦截复制方案
               function copyLink(text) {
                   if (navigator.clipboard && window.isSecureContext) {
                       navigator.clipboard.writeText(text).then(() => alert('已复制图片直链！')).catch(() => fallbackCopy(text));
@@ -427,17 +403,12 @@ export default {
                   input.value = text;
                   document.body.appendChild(input);
                   input.select();
-                  try {
-                      document.execCommand('copy');
-                      alert('已复制图片直链！');
-                  } catch(e) {
-                      alert('复制失败，请手动复制');
-                  }
+                  try { document.execCommand('copy'); alert('已复制图片直链！'); } catch(e) { alert('复制失败，请手动复制'); }
                   document.body.removeChild(input);
               }
 
               async function deleteIcon(key, btnElement) {
-                  if(!confirm('确定要彻底删除该图标吗？\\n(如果关联了TG群通知，也会同步撤回该消息)')) return;
+                  if(!confirm('确定要彻底删除该图标吗？\\n(如果关联了TG通知，机器人也会同步撤回该消息)')) return;
                   
                   btnElement.disabled = true;
                   btnElement.innerText = '删除中...';
@@ -496,7 +467,7 @@ export default {
     }
 
     // ==========================================
-    // ⚙️ 辅助函数：解析 KV 里的值 (兼容旧版)
+    // ⚙️ 辅助函数：解析 KV 里的值
     // ==========================================
     function parseKvValue(rawValue) {
         if (!rawValue) return { url: null, msgId: null, chatId: null };
@@ -523,7 +494,6 @@ export default {
         for (const keyObj of list.keys) {
           const rawValue = await env.ICON_KV.get(keyObj.name);
           const { url } = parseKvValue(rawValue);
-          
           if (url) {
               const cleanName = keyObj.name.replace(prefix, '');
               iconArray.push({ "name": cleanName, "url": url });
@@ -540,7 +510,7 @@ export default {
     }
 
     // ==========================================
-    // 🖼️ 接口 2：获取游客图库数据
+    // 🖼️ 接口 2：获取游客画廊数据
     // ==========================================
     if (request.method === 'GET' && path === '/api/guest/list') {
       if (request.headers.get('Authorization') !== env.GUEST_PASSWORD) return new Response('Unauthorized', { status: 401 });
@@ -559,7 +529,7 @@ export default {
     }
 
     // ==========================================
-    // 📤 接口 3：处理上传
+    // 📤 接口 3：处理网页端上传 (并发送带有删除按钮的 TG 通知)
     // ==========================================
     if (request.method === 'POST' && path === '/api/upload') {
       const role = url.searchParams.get('role') || 'guest';
@@ -583,18 +553,29 @@ export default {
       let tgMsgId = null;
       let tgChatId = null;
       const roleName = role === 'admin' ? '管理员后台' : '专用图标区';
-      const msg = `🔔 <b>来自[${roleName}]的图标上传</b>\n名称: <code>${iconName}</code>\n链接: ${publicUrl}`;
       
+      // 提取第一个 ID 作为网页上传默认通知的目标通道 (防止使用群组和个人的逗号字符串导致报错)
+      const primaryTargetId = env.ADMIN_CHAT_ID ? String(env.ADMIN_CHAT_ID).split(',')[0].trim() : null;
+
       try {
-        const tgRes = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: env.ADMIN_CHAT_ID, text: msg, parse_mode: 'HTML' })
-        });
-        if (tgRes.ok) {
-            const tgData = await tgRes.json();
-            tgMsgId = tgData.result.message_id;
-            tgChatId = tgData.result.chat.id;
+        if (primaryTargetId) {
+            const tgRes = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
+              method: 'POST', 
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                  chat_id: primaryTargetId, 
+                  text: `🔔 <b>来自[${roleName}]的图标上传</b>\n名称: <code>${iconName}</code>\n链接: ${publicUrl}`, 
+                  parse_mode: 'HTML',
+                  reply_markup: {
+                      inline_keyboard: [[{ text: "🗑️ 从数据库中彻底删除", callback_data: `del:${role}:${iconName}` }]]
+                  }
+              })
+            });
+            if (tgRes.ok) {
+                const tgData = await tgRes.json();
+                tgMsgId = tgData.result.message_id;
+                tgChatId = tgData.result.chat.id;
+            }
         }
       } catch (e) { console.log("TG通知发送失败", e); }
 
@@ -605,36 +586,30 @@ export default {
     }
 
     // ==========================================
-    // 🛠️ 接口 4：管理员 API
+    // 🛠️ 接口 4：网页管理员 API 
     // ==========================================
     if (request.method === 'GET' && path === '/api/admin/list') {
       if (request.headers.get('Authorization') !== env.ADMIN_PASSWORD) return new Response('Unauthorized', { status: 401 });
-      
       const list = await env.ICON_KV.list();
       let result =[];
       for (const keyObj of list.keys) {
         const rawValue = await env.ICON_KV.get(keyObj.name);
         const { url } = parseKvValue(rawValue);
-        
         const role = keyObj.name.startsWith('admin:') ? 'admin' : 'guest';
         const cleanName = keyObj.name.replace(`${role}:`, '');
         if(url) result.push({ key: keyObj.name, name: cleanName, role: role, url: url });
       }
       result.sort((a, b) => a.role.localeCompare(b.role));
-      
       return new Response(JSON.stringify(result), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }});
     }
 
     if (request.method === 'POST' && path === '/api/admin/delete') {
       if (request.headers.get('Authorization') !== env.ADMIN_PASSWORD) return new Response('Unauthorized', { status: 401 });
-      
       const body = await request.json();
       const key = body.key; 
       const rawValue = await env.ICON_KV.get(key);
-      
       if (rawValue) {
         const { url, msgId, chatId } = parseKvValue(rawValue);
-        
         if (url) {
             const r2Path = url.replace(`${env.R2_PUBLIC_URL}/`, '');
             await env.ICON_R2.delete(r2Path);
@@ -653,45 +628,137 @@ export default {
     }
 
     // ==========================================
-    // 🤖 接口 5：TG Bot Webhook 上传
+    // 🤖 接口 5：TG Bot 深度交互引擎 (多 ID 鉴权支持)
     // ==========================================
     if (request.method === 'POST' && path === `/webhook/tg/${env.TG_BOT_TOKEN}`) {
       const update = await request.json();
-      if (update.message && update.message.photo) {
-        const chatId = update.message.chat.id;
-        const photo = update.message.photo.pop(); 
-        const fileId = photo.file_id;
-        const iconName = update.message.caption || `tg_icon_${Date.now()}`;
+      
+      // 获取配置中允许的全部 Admin ID 列表
+      const allowedAdminIds = env.ADMIN_CHAT_ID ? String(env.ADMIN_CHAT_ID).split(',').map(s => s.trim()) :[];
 
-        try {
-          const fileInfoRes = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/getFile?file_id=${fileId}`);
-          const fileInfo = await fileInfoRes.json();
+      // --- 1. 处理内联按钮回调 (点击删除图标) ---
+      if (update.callback_query) {
+        const cb = update.callback_query;
+        const data = cb.data;
+        const chatRoomId = String(cb.message.chat.id); // 消息所在的聊天室ID
+        const userId = String(cb.from.id); // 点击按钮的人的ID
+
+        // 多 ID 鉴权拦截：聊天室ID 或者 操作人ID 只要有一个在白名单内，就放行
+        if (allowedAdminIds.length > 0 && !allowedAdminIds.includes(chatRoomId) && !allowedAdminIds.includes(userId)) {
+            return new Response('OK');
+        }
+
+        if (data.startsWith('del:')) {
+          const parts = data.split(':');
+          const role = parts[1];
+          const iconName = parts.slice(2).join(':'); 
+          const kvKey = `${role}:${iconName}`;
           
-          const imageRes = await fetch(`https://api.telegram.org/file/bot${env.TG_BOT_TOKEN}/${fileInfo.result.file_path}`);
-          const imageBuffer = await imageRes.arrayBuffer();
-
-          const r2Path = `tg/${iconName}.png`;
-          await env.ICON_R2.put(r2Path, imageBuffer);
-          const publicUrl = `${env.R2_PUBLIC_URL}/${r2Path}`;
-
-          let replyMsgId = null;
-          const tgRes = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: chatId, text: `✅ 图标[${iconName}] 已入库并更新至 Admin JSON！` })
-          });
-          if (tgRes.ok) {
-              const tgData = await tgRes.json();
-              replyMsgId = tgData.result.message_id;
+          const rawValue = await env.ICON_KV.get(kvKey);
+          if (rawValue) {
+            const { url } = parseKvValue(rawValue);
+            if (url) {
+              const r2Path = url.replace(`${env.R2_PUBLIC_URL}/`, '');
+              await env.ICON_R2.delete(r2Path);
+            }
+            await env.ICON_KV.delete(kvKey);
+            
+            // 变更消息本身，移除按钮并修改提示文字
+            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/editMessageText`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: cb.message.chat.id,
+                message_id: cb.message.message_id,
+                text: `🗑️ 图标 [${iconName}] 已通过机器人撤回并彻底删除。`
+              })
+            });
+          } else {
+             await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/editMessageText`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ chat_id: cb.message.chat.id, message_id: cb.message.message_id, text: `⚠️ 图标 [${iconName}] 不存在或已被删除。` })
+            });
           }
-
-          const kvValueObj = { url: publicUrl, msgId: replyMsgId, chatId: chatId };
-          await env.ICON_KV.put(`admin:${iconName}`, JSON.stringify(kvValueObj));
-
-        } catch (err) {
-          await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: chatId, text: `❌ 上传失败` })
+          
+          // 给机器人回复弹窗，消除转圈圈 loading 状态
+          await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/answerCallbackQuery`, {
+             method: 'POST', headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ callback_query_id: cb.id, text: "清理完成！" })
           });
+        }
+        return new Response('OK');
+      }
+
+      // --- 2. 处理聊天发送的消息 ---
+      if (update.message) {
+        const chatRoomId = String(update.message.chat.id);
+        const userId = String(update.message.from.id);
+        
+        // 多 ID 鉴权拦截
+        if (allowedAdminIds.length > 0 && !allowedAdminIds.includes(chatRoomId) && !allowedAdminIds.includes(userId)) {
+            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ chat_id: chatRoomId, text: "⛔ 你没有权限使用此图标管理机器人。" })
+            });
+            return new Response('OK');
+        }
+
+        // [菜单指令处理]
+        if (update.message.text === '/start' || update.message.text === '/help') {
+           const helpMsg = `👋 <b>欢迎使用专属图标管理机器人</b>\n\n🖼️ <b>如何上传？</b>\n直接发送一张图片给我，并在发送时的<b>“添加文字说明 (Caption)”</b>处填写图标名称（例如 <code>wechat</code>）。\n\n🗑️ <b>如何删除？</b>\n无论是机器人上传还是网页上传，只要消息下方带有【🗑️ 从数据库中彻底删除】按钮，直接点击即可销毁图标并更新 JSON。\n\n🌐 <b>网页端管理控制台</b>\n${hostUrl}/admin`;
+           await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ chat_id: chatRoomId, text: helpMsg, parse_mode: 'HTML' })
+           });
+           return new Response('OK');
+        }
+
+        // [机器端图片直传处理]
+        if (update.message.photo) {
+          const photo = update.message.photo.pop(); 
+          const fileId = photo.file_id;
+          const iconName = update.message.caption || `tg_icon_${Date.now()}`;
+          const role = 'admin'; 
+          const kvKey = `${role}:${iconName}`;
+
+          try {
+            const fileInfoRes = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/getFile?file_id=${fileId}`);
+            const fileInfo = await fileInfoRes.json();
+            
+            const imageRes = await fetch(`https://api.telegram.org/file/bot${env.TG_BOT_TOKEN}/${fileInfo.result.file_path}`);
+            const imageBuffer = await imageRes.arrayBuffer();
+
+            const r2Path = `tg/${iconName}_${Date.now()}.png`;
+            await env.ICON_R2.put(r2Path, imageBuffer);
+            const publicUrl = `${env.R2_PUBLIC_URL}/${r2Path}`;
+
+            let replyMsgId = null;
+            // 发送成功通知并附带内联删除按钮
+            const tgRes = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                chat_id: chatRoomId, 
+                text: `✅ <b>上传成功</b>\n名称: <code>${iconName}</code>\n直链: ${publicUrl}\n\n<i>(图标已自动归类至 Admin 库)</i>`, 
+                parse_mode: 'HTML',
+                reply_markup: {
+                  inline_keyboard: [[{ text: "🗑️ 从数据库中彻底删除", callback_data: `del:${role}:${iconName}` }]]
+                }
+              })
+            });
+            
+            if (tgRes.ok) {
+                const tgData = await tgRes.json();
+                replyMsgId = tgData.result.message_id;
+            }
+
+            const kvValueObj = { url: publicUrl, msgId: replyMsgId, chatId: chatRoomId };
+            await env.ICON_KV.put(kvKey, JSON.stringify(kvValueObj));
+
+          } catch (err) {
+            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ chat_id: chatRoomId, text: `❌ 上传失败` })
+            });
+          }
         }
       }
       return new Response('OK');
