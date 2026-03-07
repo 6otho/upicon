@@ -2,7 +2,19 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname;
-    const hostUrl = url.origin;
+    
+    // ==========================================
+    // 🌐 智能域名识别机制 (支持自定义域名变量)
+    // ==========================================
+    let hostUrl = url.origin;
+    if (env.CUSTOM_DOMAIN) {
+      // 自动清理变量里可能带有前后的空格或多余的斜杠
+      hostUrl = env.CUSTOM_DOMAIN.trim().replace(/\/$/, '');
+      // 如果用户没写协议头，自动补上 https://
+      if (!hostUrl.startsWith('http')) {
+        hostUrl = 'https://' + hostUrl;
+      }
+    }
 
     // ==========================================
     // 🎨 共享的前端 CSS 样式
@@ -637,23 +649,24 @@ export default {
     }
 
     // ==========================================
-    // 🤖 接口 5：TG Bot 深度交互引擎 (修复按钮闪烁 & 取消预览)
+    // 🤖 接口 5：TG Bot 深度交互引擎
     // ==========================================
     if (request.method === 'POST' && path === `/webhook/tg/${env.TG_BOT_TOKEN}`) {
       const update = await request.json();
       const allowedAdminIds = env.ADMIN_CHAT_ID ? String(env.ADMIN_CHAT_ID).split(',').map(s => s.trim()) :[];
 
+      // 菜单文本动态提取 hostUrl，完美适配任何部署者的自定义域名或默认域名！
       const menuText = `👋 <b>欢迎使用专属图标管理机器人</b>
 
 🖼️ <b>如何上传？</b>
 直接发送一张图片给我，并在发送时的<b>“添加文字说明 (Caption)”</b>处填写图标名称（例如 <code>wechat</code>）。
 
 🌐 <b>网页管理控制台：</b>
-https://upicon.iknn.eu.org/admin
+${hostUrl}/admin
 
 🔗 <b>订阅 JSON 链接：</b>
-• <b>游客订阅：</b> https://upicon.iknn.eu.org/guest.json
-• <b>管理订阅：</b> https://upicon.iknn.eu.org/admin.json`;
+• <b>游客订阅：</b> ${hostUrl}/guest.json
+• <b>管理订阅：</b> ${hostUrl}/admin.json`;
 
       const menuMarkup = {
           inline_keyboard: [[
@@ -690,7 +703,6 @@ https://upicon.iknn.eu.org/admin
                 reply_markup: { inline_keyboard: [[{ text: "🔙 返回主菜单", callback_data: "menu" }]] }
               })
             });
-            // 修复：补全 headers 解决按钮闪烁转圈圈问题
             await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/answerCallbackQuery`, { 
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify({ callback_query_id: cb.id }) 
@@ -704,7 +716,7 @@ https://upicon.iknn.eu.org/admin
               body: JSON.stringify({ 
                   chat_id: chatRoomId, message_id: cb.message.message_id, 
                   text: menuText, parse_mode: 'HTML', 
-                  disable_web_page_preview: true, // 修复：禁止生成烦人的网页大图预览
+                  disable_web_page_preview: true, // 禁止生成烦人的网页大图预览
                   reply_markup: menuMarkup 
               })
             });
@@ -775,7 +787,6 @@ https://upicon.iknn.eu.org/admin
 
         const msgText = update.message.text || '';
 
-        // [菜单指令处理]
         if (msgText === '/start' || msgText === '/help') {
            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -783,14 +794,13 @@ https://upicon.iknn.eu.org/admin
                   chat_id: chatRoomId, 
                   text: menuText, 
                   parse_mode: 'HTML', 
-                  disable_web_page_preview: true, // 修复：发送欢迎语时同样取消网页预览图
+                  disable_web_page_preview: true, // 发送欢迎语时同样取消网页预览图
                   reply_markup: menuMarkup 
               })
            });
            return new Response('OK');
         }
 
-        // [文字快捷删除指令处理]
         if (msgText.startsWith('/del ')) {
             const targetName = msgText.replace('/del ', '').trim();
             if (!targetName) return new Response('OK');
@@ -829,7 +839,6 @@ https://upicon.iknn.eu.org/admin
             return new Response('OK');
         }
 
-        // [机器端图片直传处理]
         if (update.message.photo) {
           const photo = update.message.photo.pop(); 
           const fileId = photo.file_id;
@@ -855,7 +864,7 @@ https://upicon.iknn.eu.org/admin
                 chat_id: chatRoomId, 
                 text: `✅ <b>上传成功</b>\n名称: <code>${iconName}</code>\n直链: ${publicUrl}\n\n<i>(图标已自动归类至 Admin 库)</i>`, 
                 parse_mode: 'HTML',
-                disable_web_page_preview: true, // 上传成功的提示也取消预览，保持版面干净
+                disable_web_page_preview: true,
                 reply_markup: {
                   inline_keyboard: [[{ text: "🗑️ 从数据库中彻底删除", callback_data: `del:${role}:${iconName}` }]]
                 }
