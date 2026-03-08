@@ -32,6 +32,7 @@ export default {
         .input-group input { width: 100%; padding: 15px 20px; background: rgba(255,255,255,0.03); border: 1.5px solid rgba(255,255,255,0.15); border-radius: 30px; color: white; font-size: 15px; outline: none; transition: all 0.3s; }
         .input-group input:focus { border-color: #00f2fe; background: rgba(0,242,254,0.05); box-shadow: 0 0 15px rgba(0,242,254,0.2); }
         .input-group input::placeholder { color: rgba(255,255,255,0.4); }
+        .input-group input:disabled { background: rgba(255,255,255,0.01); color: #888; cursor: not-allowed; }
         
         .file-upload-label { display: block; width: 100%; padding: 15px 20px; background: rgba(255,255,255,0.03); border: 1.5px dashed rgba(255,255,255,0.2); border-radius: 30px; color: rgba(255,255,255,0.5); font-size: 15px; cursor: pointer; text-align: left; transition: all 0.3s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 20px;}
         .file-upload-label:hover { background: rgba(0,242,254,0.05); border-color: #00f2fe; color: white; }
@@ -68,6 +69,9 @@ export default {
         th { color: #00f2fe; font-weight: normal; white-space: nowrap; }
         td { word-break: break-all; }
         
+        /* 批量多选框样式 */
+        .checkbox-custom { width: 16px; height: 16px; cursor: pointer; accent-color: #00f2fe; margin: 0; vertical-align: middle;}
+        
         .icon-preview { width: 35px; height: 35px; border-radius: 8px; object-fit: cover; vertical-align: middle; margin-right: 10px; background: rgba(255,255,255,0.05); cursor: zoom-in; border: 1px solid rgba(255,255,255,0.1); transition: transform 0.2s; }
         .icon-preview:hover { transform: scale(1.1); border-color: #00f2fe; }
 
@@ -102,13 +106,13 @@ export default {
               <div class="badge guest">专用图标节点</div>
               <form id="uploadForm">
                   <div class="input-group">
-                      <input type="text" name="icon_name" required placeholder="图标名称 (如 wechat)" autocomplete="off">
+                      <input type="text" name="icon_name" id="guestIconName" required placeholder="图标名称 (单图必填，多图忽略)" autocomplete="off">
                   </div>
                   <div class="input-group">
                       <input type="password" name="password" required placeholder="游客访问密码">
                   </div>
-                  <label for="file-upload" class="file-upload-label" id="file-name-display">选择图片 (PNG/JPG)</label>
-                  <input id="file-upload" type="file" name="file" accept="image/*" required style="display:none;">
+                  <label for="file-upload" class="file-upload-label" id="file-name-display">选择图片 (支持多选批量上传)</label>
+                  <input id="file-upload" type="file" name="files" accept="image/*" multiple required style="display:none;">
                   <button type="submit" class="submit-btn" id="submitBtn">上传至游客区</button>
               </form>
               
@@ -119,7 +123,7 @@ export default {
 
           <div class="modal" id="successModal">
               <div class="modal-content">
-                  <h3 style="margin-top:0; color:#00f2fe; font-size:18px;">✅ 上传成功！</h3>
+                  <h3 style="margin-top:0; color:#00f2fe; font-size:18px;" id="modalTitle">✅ 上传成功！</h3>
                   <label style="font-size:12px;color:#00f2fe;display:block;margin-bottom:5px;">🔗 游客 JSON 订阅地址:</label>
                   <div class="copy-box">
                       <input type="text" id="jsonLink" readonly>
@@ -128,7 +132,7 @@ export default {
                   <label style="font-size:12px;color:#00f2fe;display:block;margin-bottom:5px;">🖼️ 图片直链:</label>
                   <div class="copy-box">
                       <input type="text" id="imgLink" readonly>
-                      <button class="copy-btn" onclick="copyText('imgLink')">复制</button>
+                      <button class="copy-btn" id="imgCopyBtn" onclick="copyText('imgLink')">复制</button>
                   </div>
                   <button class="submit-btn" style="margin-top:5px;background:rgba(255,255,255,0.1);color:white;padding:10px;" onclick="document.getElementById('successModal').style.display='none'">关闭</button>
               </div>
@@ -137,25 +141,82 @@ export default {
           <script>
               const fileInput = document.getElementById('file-upload');
               const display = document.getElementById('file-name-display');
+              const iconNameInput = document.getElementById('guestIconName');
+
               fileInput.addEventListener('change', e => {
-                  display.textContent = e.target.files.length > 0 ? e.target.files[0].name : '选择图片 (PNG/JPG)';
-                  display.style.borderColor = e.target.files.length > 0 ? '#00f2fe' : 'rgba(255,255,255,0.2)';
+                  const count = e.target.files.length;
+                  if(count === 1) {
+                      display.textContent = e.target.files[0].name;
+                      iconNameInput.disabled = false;
+                      iconNameInput.required = true;
+                      iconNameInput.placeholder = "图标名称 (如 wechat)";
+                  } else if (count > 1) {
+                      display.textContent = \`已选择 \${count} 个文件 (批量上传)\`;
+                      iconNameInput.disabled = true;
+                      iconNameInput.required = false;
+                      iconNameInput.value = '';
+                      iconNameInput.placeholder = "批量上传自动使用文件名";
+                  } else {
+                      display.textContent = '选择图片 (支持多选批量上传)';
+                      iconNameInput.disabled = false;
+                      iconNameInput.required = true;
+                  }
+                  display.style.borderColor = count > 0 ? '#00f2fe' : 'rgba(255,255,255,0.2)';
               });
 
               document.getElementById('uploadForm').addEventListener('submit', async e => {
                   e.preventDefault();
+                  const files = fileInput.files;
+                  if(!files.length) return;
+
                   const btn = document.getElementById('submitBtn');
-                  btn.textContent = '上传中...'; btn.disabled = true;
-                  try {
-                      const res = await fetch('/api/upload?role=guest', { method: 'POST', body: new FormData(e.target) });
-                      const data = await res.json();
-                      if(res.ok) {
-                          document.getElementById('jsonLink').value = data.jsonUrl;
-                          document.getElementById('imgLink').value = data.imgUrl;
-                          document.getElementById('successModal').style.display = 'flex';
-                          e.target.reset(); display.textContent = '选择图片 (PNG/JPG)';
-                      } else { alert('❌ ' + data.error); }
-                  } catch(err) { alert('❌ 网络错误'); } finally { btn.textContent = '上传至游客区'; btn.disabled = false; }
+                  btn.disabled = true;
+                  
+                  let successCount = 0, failCount = 0;
+                  let lastJsonUrl = '', lastImgUrl = '';
+
+                  for(let i=0; i<files.length; i++) {
+                      btn.textContent = \`上传中... (\${i+1}/\${files.length})\`;
+                      const fd = new FormData();
+                      fd.append('password', e.target.password.value);
+                      fd.append('file', files[i]);
+                      
+                      let iName = iconNameInput.value.trim();
+                      if(files.length > 1 || !iName) {
+                          iName = files[i].name.replace(/\\.[^/.]+$/, ""); 
+                      }
+                      fd.append('icon_name', iName);
+
+                      try {
+                          const res = await fetch('/api/upload?role=guest', { method: 'POST', body: fd });
+                          if(res.ok) {
+                              successCount++;
+                              const data = await res.json();
+                              lastJsonUrl = data.jsonUrl;
+                              lastImgUrl = data.imgUrl;
+                          } else failCount++;
+                      } catch(err) { failCount++; }
+                      
+                      if(i < files.length - 1) await new Promise(r => setTimeout(r, 300));
+                  }
+
+                  if(successCount > 0) {
+                      document.getElementById('modalTitle').innerText = files.length > 1 ? \`✅ 批量成功上传 \${successCount} 个图标！\` : '✅ 上传成功！';
+                      document.getElementById('jsonLink').value = lastJsonUrl;
+                      document.getElementById('imgLink').value = files.length > 1 ? '批量上传请前往图库查看和复制直链' : lastImgUrl;
+                      document.getElementById('imgCopyBtn').style.display = files.length > 1 ? 'none' : 'block';
+                      document.getElementById('successModal').style.display = 'flex';
+                  } else {
+                      alert('❌ 上传失败，请检查密码或网络');
+                  }
+
+                  e.target.reset(); 
+                  display.textContent = '选择图片 (支持多选批量上传)';
+                  iconNameInput.disabled = false;
+                  iconNameInput.required = true;
+                  iconNameInput.placeholder = "图标名称 (如 wechat)";
+                  btn.textContent = '上传至游客区'; 
+                  btn.disabled = false; 
               });
 
               function copyText(id) { document.getElementById(id).select(); document.execCommand('copy'); alert('复制成功！'); }
@@ -258,7 +319,7 @@ export default {
     }
 
     // ==========================================
-    // 🛡️ 路由 3：管理员面板 (智能表单联动)
+    // 🛡️ 路由 3：管理员面板 (新增批量删除与选择)
     // ==========================================
     if (request.method === 'GET' && path === '/admin') {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>管理员控制台</title>${sharedCSS}</head><body>
@@ -284,14 +345,13 @@ export default {
                       <h3 style="margin-top:0; margin-bottom:15px; color:#00f2fe; font-size:16px; text-align:left;">⚡ 管理员直传</h3>
                       <form id="adminUploadForm">
                           <div class="input-group">
-                              <input type="text" name="icon_name" required placeholder="图标名称 (如 emby)" autocomplete="off">
+                              <input type="text" name="icon_name" id="adminIconName" required placeholder="图标名称 (单图必填，多图忽略)" autocomplete="off">
                           </div>
                           <div class="input-group">
-                              <!-- 提示词优化，增强用户引导 -->
-                              <input type="text" name="category" placeholder="分类合集 (自动跟随当前Tab，也可手动新建)" autocomplete="off">
+                              <input type="text" name="category" placeholder="分类合集 (自动跟随当前Tab，可新建)" autocomplete="off">
                           </div>
-                          <label for="admin-file-upload" class="file-upload-label" id="admin-file-name-display">选择图片 (PNG/JPG)</label>
-                          <input id="admin-file-upload" type="file" name="file" accept="image/*" required style="display:none;">
+                          <label for="admin-file-upload" class="file-upload-label" id="admin-file-name-display">选择图片 (支持多选批量上传)</label>
+                          <input id="admin-file-upload" type="file" name="files" accept="image/*" multiple required style="display:none;">
                           <button type="submit" class="submit-btn" id="adminSubmitBtn">上传至管理区</button>
                       </form>
                   </div>
@@ -299,7 +359,11 @@ export default {
                   <div style="flex:2; text-align:left;">
                       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
                           <h3 style="margin:0; color:#00f2fe; font-size:16px;">🗂️ 图标数据库管理</h3>
-                          <button onclick="loadList()" style="background:transparent; border:1px solid #00f2fe; color:#00f2fe; border-radius:6px; cursor:pointer; padding: 4px 15px; font-size: 13px; transition:0.3s;">刷新列表</button>
+                          <div style="display:flex; gap:10px;">
+                              <!-- 动态呼出的批量删除按钮 -->
+                              <button class="submit-btn danger" id="batchDelBtn" onclick="batchDelete()" style="display:none;">批量删除</button>
+                              <button onclick="loadList()" style="background:transparent; border:1px solid #00f2fe; color:#00f2fe; border-radius:6px; cursor:pointer; padding: 4px 15px; font-size: 13px; transition:0.3s;">刷新列表</button>
+                          </div>
                       </div>
 
                       <div class="copy-box" style="margin-bottom: 10px;">
@@ -311,8 +375,13 @@ export default {
 
                       <div class="table-container">
                           <table>
-                              <thead><tr><th>预览</th><th>合集</th><th>名称</th><th>归属</th><th>操作</th></tr></thead>
-                              <tbody id="iconListBody"><tr><td colspan="5" style="text-align:center;">加载中...</td></tr></tbody>
+                              <thead>
+                                  <tr>
+                                      <th style="width:30px;"><input type="checkbox" id="selectAll" class="checkbox-custom" onchange="toggleAll(this)"></th>
+                                      <th>预览</th><th>合集</th><th>名称</th><th>归属</th><th>操作</th>
+                                  </tr>
+                              </thead>
+                              <tbody id="iconListBody"><tr><td colspan="6" style="text-align:center;">加载中...</td></tr></tbody>
                           </table>
                       </div>
                   </div>
@@ -367,7 +436,7 @@ export default {
                   let rawCategories =[...new Set(allAdminData.map(item => item.category))];
                   let filteredCategories = rawCategories.filter(c => c !== '默认');
                   
-                  const categories = ['全部', ...filteredCategories];
+                  const categories =['全部', ...filteredCategories];
                   
                   if (categories.length <= 1) {
                       tabsDiv.style.display = 'none';
@@ -388,13 +457,12 @@ export default {
                   const linkInput = document.getElementById('adminJsonLink');
                   const catInput = document.querySelector('input[name="category"]');
                   
-                  // 核心联动：切换Tab时自动更新链接，并自动填入(或清空)分类输入框！
                   if(cat === '全部') {
                       linkInput.value = '${hostUrl}/admin.json';
-                      if(catInput) catInput.value = ''; // 点全部，默认清空分类，上传至总库
+                      if(catInput) catInput.value = ''; 
                   } else {
                       linkInput.value = '${hostUrl}/admin/' + encodeURIComponent(cat) + '.json';
-                      if(catInput) catInput.value = cat; // 自动填充当前合集名，方便直接上传
+                      if(catInput) catInput.value = cat; 
                   }
               }
 
@@ -402,7 +470,11 @@ export default {
                   const tbody = document.getElementById('iconListBody');
                   const filtered = currentCat === '全部' ? allAdminData : allAdminData.filter(i => i.category === currentCat);
                   
-                  if(filtered.length === 0) return tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">数据库空空如也</td></tr>';
+                  if(filtered.length === 0) {
+                      document.getElementById('selectAll').checked = false;
+                      document.getElementById('batchDelBtn').style.display = 'none';
+                      return tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#888;">数据库空空如也</td></tr>';
+                  }
                   
                   tbody.innerHTML = filtered.map(item => {
                       const roleTag = item.role === 'admin' ? '<span style="color:#00f2fe;font-weight:bold;">Admin</span>' : '<span style="color:#aaa">Guest</span>';
@@ -410,6 +482,7 @@ export default {
                       
                       return \`
                           <tr>
+                              <td><input type="checkbox" class="item-checkbox checkbox-custom" value="\${item.key}" onchange="checkSelection()"></td>
                               <td><img src="\${item.url}" class="icon-preview" loading="lazy" onclick="viewImage('\${item.url}')"></td>
                               <td>\${catDisplay}</td>
                               <td><code>\${item.name}</code></td>
@@ -423,6 +496,72 @@ export default {
                           </tr>
                       \`;
                   }).join('');
+                  checkSelection(); // 渲染后重置选择状态
+              }
+
+              // 全选/反选逻辑
+              function toggleAll(source) {
+                  const checkboxes = document.querySelectorAll('.item-checkbox');
+                  checkboxes.forEach(cb => cb.checked = source.checked);
+                  checkSelection();
+              }
+
+              // 检查当前选中状态，动态显示批量删除按钮
+              function checkSelection() {
+                  const checkboxes = document.querySelectorAll('.item-checkbox');
+                  const checked = document.querySelectorAll('.item-checkbox:checked');
+                  const selectAll = document.getElementById('selectAll');
+                  const batchDelBtn = document.getElementById('batchDelBtn');
+                  
+                  if(checkboxes.length > 0 && checked.length === checkboxes.length) selectAll.checked = true;
+                  else selectAll.checked = false;
+
+                  if(checked.length > 0) {
+                      batchDelBtn.style.display = 'inline-block';
+                      batchDelBtn.innerText = \`批量删除 (\${checked.length})\`;
+                  } else {
+                      batchDelBtn.style.display = 'none';
+                  }
+              }
+
+              // 执行批量删除
+              async function batchDelete() {
+                  const checked = document.querySelectorAll('.item-checkbox:checked');
+                  if(checked.length === 0) return;
+                  
+                  if(!confirm(\`确定要彻底删除这 \${checked.length} 个图标吗？\\n(关联的TG消息也会同步尝试撤回)\`)) return;
+                  
+                  const btn = document.getElementById('batchDelBtn');
+                  btn.disabled = true;
+                  btn.innerText = '删除中...';
+                  
+                  const keys = Array.from(checked).map(cb => cb.value);
+                  
+                  const res = await fetch('/api/admin/delete', {
+                      method: 'POST', headers: { 'Authorization': pwd, 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ keys: keys }) // 传数组给后端
+                  });
+                  
+                  if(res.ok) { 
+                      loadList(); 
+                  } else { 
+                      alert('❌ 批量删除失败'); 
+                      btn.disabled = false;
+                      checkSelection();
+                  }
+              }
+
+              // 兼容单个删除
+              async function deleteIcon(key, btnElement) {
+                  if(!confirm('确定要彻底删除该图标吗？')) return;
+                  btnElement.disabled = true; btnElement.innerText = '中...';
+
+                  const res = await fetch('/api/admin/delete', {
+                      method: 'POST', headers: { 'Authorization': pwd, 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ keys: [key] }) // 转换为数组给后端
+                  });
+                  if(res.ok) { loadList(); } 
+                  else { alert('❌ 删除失败'); btnElement.disabled = false; btnElement.innerText = '删除'; }
               }
 
               function viewImage(url) { document.getElementById('viewerImage').src = url; document.getElementById('imageViewer').style.display = 'flex'; }
@@ -438,47 +577,79 @@ export default {
                   input.select(); try{ document.execCommand('copy'); alert('已复制直链！'); }catch(e){} document.body.removeChild(input);
               }
 
-              async function deleteIcon(key, btnElement) {
-                  if(!confirm('确定要彻底删除该图标吗？')) return;
-                  btnElement.disabled = true; btnElement.innerText = '中...';
-
-                  const res = await fetch('/api/admin/delete', {
-                      method: 'POST', headers: { 'Authorization': pwd, 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ key })
-                  });
-                  if(res.ok) { loadList(); } 
-                  else { alert('❌ 删除失败'); btnElement.disabled = false; btnElement.innerText = '删除'; }
-              }
-
               const adminFileInput = document.getElementById('admin-file-upload');
               const adminDisplay = document.getElementById('admin-file-name-display');
+              const adminIconNameInput = document.getElementById('adminIconName');
+
               adminFileInput.addEventListener('change', e => {
-                  adminDisplay.textContent = e.target.files.length > 0 ? e.target.files[0].name : '选择图片 (PNG/JPG)';
-                  adminDisplay.style.borderColor = e.target.files.length > 0 ? '#00f2fe' : 'rgba(255,255,255,0.2)';
+                  const count = e.target.files.length;
+                  if(count === 1) {
+                      adminDisplay.textContent = e.target.files[0].name;
+                      adminIconNameInput.disabled = false;
+                      adminIconNameInput.required = true;
+                      adminIconNameInput.placeholder = "图标名称 (如 emby)";
+                  } else if (count > 1) {
+                      adminDisplay.textContent = \`已选择 \${count} 个文件 (批量上传)\`;
+                      adminIconNameInput.disabled = true;
+                      adminIconNameInput.required = false;
+                      adminIconNameInput.value = '';
+                      adminIconNameInput.placeholder = "批量上传将自动使用原文件名";
+                  } else {
+                      adminDisplay.textContent = '选择图片 (支持多选批量上传)';
+                      adminIconNameInput.disabled = false;
+                      adminIconNameInput.required = true;
+                  }
+                  adminDisplay.style.borderColor = count > 0 ? '#00f2fe' : 'rgba(255,255,255,0.2)';
               });
 
               document.getElementById('adminUploadForm').addEventListener('submit', async e => {
                   e.preventDefault();
+                  const files = adminFileInput.files;
+                  if(!files.length) return;
+
                   const btn = document.getElementById('adminSubmitBtn');
-                  btn.textContent = '上传中...'; btn.disabled = true;
-                  try {
-                      const formData = new FormData(e.target);
-                      formData.append('password', pwd); 
-                      const res = await fetch('/api/upload?role=admin', { method: 'POST', body: formData });
-                      if(res.ok) {
-                          alert('✅ 上传成功！');
-                          e.target.reset(); 
-                          
-                          // 核心体验优化：上传重置表单后，如果当前在某个具体合集下，把合集名写回去，方便连续上传！
-                          const catInput = document.querySelector('input[name="category"]');
-                          if (currentCat !== '全部' && catInput) {
-                              catInput.value = currentCat;
-                          }
-                          
-                          adminDisplay.textContent = '选择图片 (PNG/JPG)';
-                          loadList(); 
-                      } else { alert('❌ 上传失败'); }
-                  } catch(err) { alert('❌ 网络错误'); } finally { btn.textContent = '上传至管理区'; btn.disabled = false; }
+                  btn.disabled = true;
+                  
+                  const targetCategory = e.target.category.value;
+                  let successCount = 0, failCount = 0;
+
+                  for(let i=0; i<files.length; i++) {
+                      btn.textContent = \`上传中... (\${i+1}/\${files.length})\`;
+                      
+                      const fd = new FormData();
+                      fd.append('password', pwd);
+                      fd.append('category', targetCategory);
+                      fd.append('file', files[i]);
+                      
+                      let iName = adminIconNameInput.value.trim();
+                      if(files.length > 1 || !iName) {
+                          iName = files[i].name.replace(/\\.[^/.]+$/, ""); 
+                      }
+                      fd.append('icon_name', iName);
+
+                      try {
+                          const res = await fetch('/api/upload?role=admin', { method: 'POST', body: fd });
+                          if(res.ok) successCount++; else failCount++;
+                      } catch(err) { failCount++; }
+                      
+                      if(i < files.length - 1) await new Promise(r => setTimeout(r, 300));
+                  }
+
+                  alert(files.length > 1 ? \`✅ 批量上传完成！\\n成功: \${successCount} 个 \\n失败: \${failCount} 个\` : '✅ 上传成功！');
+                  
+                  e.target.reset(); 
+                  adminDisplay.textContent = '选择图片 (支持多选批量上传)';
+                  adminIconNameInput.disabled = false;
+                  adminIconNameInput.required = true;
+                  adminIconNameInput.placeholder = "图标名称 (如 emby)";
+                  
+                  if (currentCat !== '全部') {
+                      document.querySelector('input[name="category"]').value = currentCat;
+                  }
+                  
+                  loadList(); 
+                  btn.textContent = '上传至管理区'; 
+                  btn.disabled = false; 
               });
           </script>
       </body></html>`;
@@ -663,25 +834,34 @@ export default {
       return Response.json({ success: true, iconName: iconName, imgUrl: publicUrl, jsonUrl: finalJsonUrl });
     }
 
+    // ==========================================
+    // 🗑️ 后端 API：支持单条和数组批量删除
+    // ==========================================
     if (request.method === 'POST' && path === '/api/admin/delete') {
       if (request.headers.get('Authorization') !== env.ADMIN_PASSWORD) return new Response('Unauthorized', { status: 401 });
       const body = await request.json();
-      const key = body.key; 
-      const rawValue = await env.ICON_KV.get(key);
-      if (rawValue) {
-        const { url, msgId, chatId } = parseKvValue(rawValue);
-        if (url) {
-            const urlObj = new URL(url);
-            const r2Path = urlObj.pathname.substring(1);
-            await env.ICON_R2.delete(r2Path);
-        }
-        await env.ICON_KV.delete(key);
-        if (msgId && chatId) {
-            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/deleteMessage`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: chatId, message_id: msgId })
-            }).catch(() => {});
-        }
+      
+      // 兼容传单 key 或是传 keys 数组
+      const keys = body.keys || (body.key ? [body.key] :[]);
+
+      for (const key of keys) {
+          const rawValue = await env.ICON_KV.get(key);
+          if (rawValue) {
+            const { url, msgId, chatId } = parseKvValue(rawValue);
+            if (url) {
+                const urlObj = new URL(url);
+                const r2Path = urlObj.pathname.substring(1);
+                await env.ICON_R2.delete(r2Path);
+            }
+            await env.ICON_KV.delete(key);
+            if (msgId && chatId) {
+                // 并发执行 TG 撤回请求，不阻塞主线程
+                fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/deleteMessage`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chatId, message_id: msgId })
+                }).catch(() => {});
+            }
+          }
       }
       return new Response('Deleted', { status: 200 });
     }
