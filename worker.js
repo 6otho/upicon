@@ -29,7 +29,7 @@ export default {
     }
 
     // ==========================================
-    // 🎨 共享前端 CSS (包含完美绝对居中)
+    // 🎨 共享前端 CSS (终极对称居中排版)
     // ==========================================
     const sharedCSS = `
       <style>
@@ -49,7 +49,7 @@ export default {
         .page-wrapper { padding: 5vh 20px; width: 100%; max-width: 1400px; margin: 0 auto; position: relative; }
         .panel { background: rgba(15, 18, 25, 0.7); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(0, 242, 254, 0.15); border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0,242,254,0.05); }
         
-        /* 🎯 完美绝对居中：登录框死死钉在屏幕正中间 */
+        /* 登录框绝对居中 */
         .login-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; padding: 40px 30px; text-align: center; z-index: 50; margin: 0; }
         .dashboard-panel { width: 100%; padding: 30px; margin: 0 auto; }
 
@@ -65,7 +65,7 @@ export default {
         .file-upload-label { display: block; width: 100%; padding: 15px 20px; background: rgba(255,255,255,0.03); border: 1.5px dashed rgba(255,255,255,0.2); border-radius: 30px; color: rgba(255,255,255,0.5); font-size: 14px; cursor: pointer; text-align: left; transition: all 0.3s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 20px; box-sizing: border-box;}
         .file-upload-label:hover { background: rgba(0,242,254,0.05); border-color: #00f2fe; color: white; }
         
-        /* 🎯 大按钮文字完美居中 */
+        /* 大按钮文字完美居中 */
         .submit-btn { display: flex; justify-content: center; align-items: center; width: 100%; padding: 15px; background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #050608; border: none; border-radius: 30px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s; text-align: center; }
         .submit-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,242,254,0.4); }
         .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -73,7 +73,7 @@ export default {
         .submit-btn.gallery-btn { background: linear-gradient(135deg, #0052d4 0%, #4364f7 100%); box-shadow: 0 5px 15px rgba(67, 100, 247, 0.3); color: #fff;}
         .submit-btn.gallery-btn:hover:not(:disabled) { background: linear-gradient(135deg, #4364f7 0%, #6fb1fc 100%); box-shadow: 0 8px 25px rgba(67, 100, 247, 0.6); }
         
-        /* 🎯 复制/删除 小按钮文字绝对居中 */
+        /* 复制/删除 小按钮文字绝对居中 */
         .submit-btn.danger { display: inline-flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); box-shadow: none; padding: 6px 12px; font-size: 12px; color: white; border-radius: 20px; width: auto; text-align: center; }
         .submit-btn.danger:hover:not(:disabled) { box-shadow: 0 5px 15px rgba(255,65,108,0.4); }
         .submit-btn.outline { display: inline-flex; justify-content: center; align-items: center; background: transparent; border: 1px solid #00f2fe; color: #00f2fe; padding: 6px 15px; border-radius: 20px; font-size: 12px; font-weight: normal; width: auto; margin: 0; text-align: center; }
@@ -97,6 +97,9 @@ export default {
         th, td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
         th { color: #00f2fe; font-weight: normal; white-space: nowrap; }
         
+        /* 电脑端默认靠左 */
+        .name-box { display: flex; flex-direction: column; line-height: 1.5; align-items: flex-start; text-align: left; }
+        
         .action-btns { display: flex; gap: 6px; flex-wrap: nowrap; align-items: center; }
         .checkbox-custom { width: 16px; height: 16px; cursor: pointer; accent-color: #00f2fe; margin: 0; vertical-align: middle;}
         
@@ -114,7 +117,7 @@ export default {
         @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         /* ==========================================
-           📱 移动端自适应 (终极排版)
+           📱 移动端自适应 (终极对称居中强迫症治愈版)
            ========================================== */
         @media (max-width: 900px) {
             .page-wrapper { padding: 2vh 10px; display: block; }
@@ -129,12 +132,18 @@ export default {
             table { width: 100%; table-layout: fixed; min-width: 340px; } 
             th, td { padding: 8px 4px; font-size: 11px; vertical-align: middle; word-wrap: break-word; }
             
-            th.col-cb, td.col-cb { width: 22px; text-align: center; padding: 0; } 
+            th.col-cb, td.col-cb { width: 24px; text-align: center; padding: 0; } 
             th.col-preview, td.col-preview { width: 38px; text-align: center; } 
-            th.col-cat, td.col-cat { width: 20%; } 
-            th.col-role, td.col-role { width: 45px; text-align: center; } 
-            th.col-name, td.col-name { width: auto; } 
-            th.col-actions, td.col-actions { width: 52px; text-align: center; } 
+            
+            /* 🎯 治愈强迫症：将“合集”和“归属”完全左右对称锁死，释放中间全部空间！ */
+            th.col-cat, td.col-cat { width: 48px; text-align: center; padding: 0 2px; } 
+            th.col-role, td.col-role { width: 48px; text-align: center; padding: 0 2px; } 
+            
+            /* 🎯 治愈强迫症：名称由于两边对称，此时绝对居中！ */
+            th.col-name, td.col-name { width: auto; text-align: center; } 
+            .name-box { align-items: center; justify-content: center; text-align: center; width: 100%; margin: 0 auto; }
+            
+            th.col-actions, td.col-actions { width: 56px; text-align: center; } 
             
             .icon-preview { width: 28px; height: 28px; margin: 0 auto; display: block; border-radius: 6px; }
             
@@ -256,7 +265,7 @@ export default {
                   if (!inputPwd) return;
 
                   const origText = btn.innerText;
-                  btn.innerText = '登录加载中...'; btn.disabled = true;
+                  btn.innerText = '登录中...'; btn.disabled = true;
 
                   try {
                       const res = await fetch('/api/guest/list', { headers: { 'Authorization': inputPwd } });
@@ -282,7 +291,7 @@ export default {
                       tr.innerHTML = \`
                           <td class="col-preview"><img src="\${item.url}" class="icon-preview" onclick="viewImage('\${item.url}')" loading="lazy"></td>
                           <td class="col-name">
-                              <div style="display:flex; flex-direction:column; line-height:1.5;">
+                              <div class="name-box">
                                   <code style="color:#e0e6ed; font-size:13px; word-break: break-all;">\${item.name}</code>
                                   <span style="font-size:11px; color:#00f2fe; margin-top:2px;">\${item.size || '未知'}</span>
                               </div>
@@ -301,7 +310,7 @@ export default {
     }
 
     // ==========================================
-    // 🛡️ 路由 3：管理员面板 
+    // 🛡️ 路由 3：管理员面板
     // ==========================================
     if (request.method === 'GET' && path === '/admin') {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>管理员控制台</title>${sharedCSS}</head><body>
@@ -387,7 +396,7 @@ export default {
                   if (!inputPwd) return;
 
                   const origText = btn.innerText;
-                  btn.innerText = '闪电登录中...'; btn.disabled = true;
+                  btn.innerText = '登录中...'; btn.disabled = true;
 
                   try {
                       const res = await fetch('/api/admin/list', { headers: { 'Authorization': inputPwd } });
@@ -444,7 +453,7 @@ export default {
                           <td class="col-preview"><img src="\${item.url}" class="icon-preview" loading="lazy" onclick="viewImage('\${item.url}')"></td>
                           <td class="col-cat">\${catDisplay}</td>
                           <td class="col-name">
-                              <div style="display:flex; flex-direction:column; line-height:1.5;">
+                              <div class="name-box">
                                   <code style="color:#e0e6ed; font-size:13px; word-break: break-all;">\${item.name}</code>
                                   <span style="font-size:11px; color:#00f2fe; margin-top:2px;">\${item.size || '未知'}</span>
                               </div>
@@ -464,10 +473,9 @@ export default {
                   if(checked.length > 0) { batchDelBtn.style.display = 'inline-flex'; batchDelBtn.innerText = \`批量删除 (\${checked.length})\`; } else { batchDelBtn.style.display = 'none'; }
               }
 
-              // 🚀 核心优化：无感删除，绝不闪烁表格！
               async function batchDelete() {
                   const checked = document.querySelectorAll('.item-checkbox:checked'); if(checked.length === 0) return;
-                  if(!confirm(\`确定要彻底删除这 \${checked.length} 个图标吗？\\n(如果关联了TG群通知，也会同步撤回)\`)) return;
+                  if(!confirm(\`确定要彻底删除这 \${checked.length} 个图标吗？\n(如果关联了TG群通知，也会同步撤回)\`)) return;
                   
                   const btn = document.getElementById('batchDelBtn'); btn.disabled = true; btn.innerText = '删除中...';
                   const keys = Array.from(checked).map(cb => cb.value);
@@ -486,7 +494,7 @@ export default {
               async function deleteIcon(key, btnElement) {
                   if(!confirm('确定彻底删除该图标吗？')) return; 
                   const origText = btnElement.innerText;
-                  btnElement.disabled = true; btnElement.innerText = '删除中...';
+                  btnElement.disabled = true; btnElement.innerText = '中...';
                   try {
                       const res = await fetch('/api/admin/delete', { method: 'POST', headers: { 'Authorization': pwd, 'Content-Type': 'application/json' }, body: JSON.stringify({ keys:[key] }) });
                       if(res.ok) { 
@@ -569,8 +577,6 @@ export default {
             let iconArray =[]; let listComplete = false; let cursor = undefined;
             while (!listComplete) {
                 const list = await env.ICON_KV.list({ prefix: prefix, cursor: cursor });
-                
-                // 🚀 并发请求改造：极大加速 JSON 生成速度
                 const chunkResults = await Promise.all(list.keys.map(async keyObj => {
                     const parts = keyObj.name.split(':'); const itemCategory = parts.length >= 3 ? parts[1] : '管理区'; const cleanName = parts.length >= 3 ? parts.slice(2).join(':') : parts[1];
                     if (!isGuest && reqCategory && itemCategory !== reqCategory) return null;
@@ -579,7 +585,6 @@ export default {
                     return null;
                 }));
                 iconArray.push(...chunkResults.filter(Boolean));
-                
                 listComplete = list.list_complete; cursor = list.cursor;
             }
             return new Response(JSON.stringify({ "name": libName, "description": "基于 Cloudflare Workers 自建的图标分类分发库", "icons": iconArray }, null, 2), { headers: { 'Content-Type': 'application/json;charset=UTF-8', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache' } });
@@ -587,7 +592,6 @@ export default {
       }
     }
 
-    // 🚀 并发请求改造：极大加速后台登录和刷新速度
     if (request.method === 'GET' && path === '/api/guest/list') {
       if (request.headers.get('Authorization') !== env.GUEST_PASSWORD) return new Response('Unauthorized', { status: 401 });
       let result =[]; let listComplete = false; let cursor = undefined;
@@ -679,7 +683,7 @@ export default {
     }
 
     // ==========================================
-    // 🤖 TG Bot 引擎 (解决按键狂闪)
+    // 🤖 TG Bot 引擎
     // ==========================================
     if (request.method === 'POST' && path === `/webhook/tg/${env.TG_BOT_TOKEN}`) {
       const update = await request.json();
@@ -715,11 +719,7 @@ ${hostUrl}/admin
       if (update.callback_query) {
         const cb = update.callback_query; const data = cb.data; const chatRoomId = String(cb.message.chat.id); const userId = String(cb.from.id);
         
-        // 🚀 核心优化：第1时间发出停止闪烁指令，绝不让按键转圈！
-        await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/answerCallbackQuery`, { 
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ callback_query_id: cb.id, text: data.startsWith('del_kv:') ? "✅ 删除指令已发送！" : "" }) 
-        }).catch(()=>{});
+        await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/answerCallbackQuery`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ callback_query_id: cb.id }) }).catch(()=>{});
 
         if (allowedAdminIds.length > 0 && !allowedAdminIds.includes(chatRoomId) && !allowedAdminIds.includes(userId)) return new Response('OK');
 
@@ -810,7 +810,6 @@ ${hostUrl}/admin
           const newKb = currentKb.map(row => row.filter(btn => btn.callback_data !== data)).filter(row => row.length > 0);
           const msgText = cb.message.text || '';
           
-          // 🚀 核心优化：利用 waitUntil 在后台静默干活，绝不阻塞用户界面的极速响应
           ctx.waitUntil((async () => {
               if (msgText.includes('网页端上传') || msgText.includes('入库成功')) {
                   await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/editMessageText`, {
