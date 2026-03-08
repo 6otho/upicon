@@ -4,16 +4,12 @@ export default {
     const path = url.pathname;
     
     // ==========================================
-    // 🌐 智能域名识别机制 (支持自定义域名变量)
+    // 🌐 智能域名识别机制
     // ==========================================
     let hostUrl = url.origin;
     if (env.CUSTOM_DOMAIN) {
-      // 自动清理变量里可能带有前后的空格或多余的斜杠
       hostUrl = env.CUSTOM_DOMAIN.trim().replace(/\/$/, '');
-      // 如果用户没写协议头，自动补上 https://
-      if (!hostUrl.startsWith('http')) {
-        hostUrl = 'https://' + hostUrl;
-      }
+      if (!hostUrl.startsWith('http')) hostUrl = 'https://' + hostUrl;
     }
 
     // ==========================================
@@ -32,7 +28,7 @@ export default {
         .badge.guest { border-color: rgba(255,255,255,0.3); color: #aaa; background: rgba(255,255,255,0.05); }
         .badge.admin { border-color: rgba(0,242,254,0.5); color: #00f2fe; background: rgba(0,242,254,0.05); }
         
-        .input-group { position: relative; margin-bottom: 20px; width: 100%; }
+        .input-group { position: relative; margin-bottom: 15px; width: 100%; }
         .input-group input { width: 100%; padding: 15px 20px; background: rgba(255,255,255,0.03); border: 1.5px solid rgba(255,255,255,0.15); border-radius: 30px; color: white; font-size: 15px; outline: none; transition: all 0.3s; }
         .input-group input:focus { border-color: #00f2fe; background: rgba(0,242,254,0.05); box-shadow: 0 0 15px rgba(0,242,254,0.2); }
         .input-group input::placeholder { color: rgba(255,255,255,0.4); }
@@ -59,6 +55,13 @@ export default {
         .dashboard-layout { display: flex; justify-content: space-between; align-items: flex-start; gap: 30px; width: 100%; }
         .dashboard-layout > div { min-width: 0; overflow: hidden; }
         
+        .category-tabs { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 15px; padding-bottom: 5px; scrollbar-width: none; }
+        .category-tabs::-webkit-scrollbar { display: none; }
+        .tab-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #aaa; padding: 6px 16px; border-radius: 20px; cursor: pointer; white-space: nowrap; font-size: 13px; transition: 0.3s; }
+        .tab-btn:hover { background: rgba(255,255,255,0.1); }
+        .tab-btn.active { background: rgba(0,242,254,0.1); border-color: #00f2fe; color: #00f2fe; font-weight: bold; }
+        .cat-tag { background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 6px; font-size: 11px; color: #00f2fe; }
+
         .table-container { width: 100%; overflow-x: auto; text-align: left; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 350px; }
         th, td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
@@ -90,7 +93,7 @@ export default {
     `;
 
     // ==========================================
-    // 🌐 路由 1：游客首页
+    // 🌐 路由 1：游客上传页
     // ==========================================
     if (request.method === 'GET' && path === '/') {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>专用图标上传</title>${sharedCSS}</head><body>
@@ -111,28 +114,22 @@ export default {
               
               <button class="submit-btn gallery-btn" style="margin-top:20px; opacity:0.9;" onclick="location.href='/gallery'">游客图库 (上传后可查看)</button>
               
-              <div class="nav-links">
-                  <a href="/admin">⚙️ 管理员入口</a>
-              </div>
+              <div class="nav-links"><a href="/admin">⚙️ 管理员入口</a></div>
           </div>
 
           <div class="modal" id="successModal">
               <div class="modal-content">
                   <h3 style="margin-top:0; color:#00f2fe; font-size:18px;">✅ 上传成功！</h3>
-                  <p style="font-size:12px;color:#aaa;">你可以直接复制下方的链接配置到软件中。</p>
-                  
-                  <label style="font-size:12px;color:#00f2fe;display:block;margin-bottom:5px;">🔗 你的游客 JSON 订阅地址:</label>
+                  <label style="font-size:12px;color:#00f2fe;display:block;margin-bottom:5px;">🔗 游客 JSON 订阅地址:</label>
                   <div class="copy-box">
                       <input type="text" id="jsonLink" readonly>
                       <button class="copy-btn" onclick="copyText('jsonLink')">复制</button>
                   </div>
-
-                  <label style="font-size:12px;color:#00f2fe;display:block;margin-bottom:5px;">🖼️ 当前图片直链 (单图场景):</label>
+                  <label style="font-size:12px;color:#00f2fe;display:block;margin-bottom:5px;">🖼️ 图片直链:</label>
                   <div class="copy-box">
                       <input type="text" id="imgLink" readonly>
                       <button class="copy-btn" onclick="copyText('imgLink')">复制</button>
                   </div>
-                  
                   <button class="submit-btn" style="margin-top:5px;background:rgba(255,255,255,0.1);color:white;padding:10px;" onclick="document.getElementById('successModal').style.display='none'">关闭</button>
               </div>
           </div>
@@ -161,11 +158,7 @@ export default {
                   } catch(err) { alert('❌ 网络错误'); } finally { btn.textContent = '上传至游客区'; btn.disabled = false; }
               });
 
-              function copyText(id) {
-                  const input = document.getElementById(id);
-                  input.select(); document.execCommand('copy');
-                  alert('复制成功！');
-              }
+              function copyText(id) { document.getElementById(id).select(); document.execCommand('copy'); alert('复制成功！'); }
           </script>
       </body></html>`;
       return new Response(html, { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
@@ -178,9 +171,7 @@ export default {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>游客图库</title>${sharedCSS}</head><body>
           <div class="glass-panel" id="loginBox">
               <h1>Guest Gallery</h1>
-              <div class="input-group">
-                  <input type="password" id="guestPwd" placeholder="请输入游客访问密码" onkeydown="if(event.key==='Enter') login()">
-              </div>
+              <div class="input-group"><input type="password" id="guestPwd" placeholder="请输入游客访问密码" onkeydown="if(event.key==='Enter') login()"></div>
               <button class="submit-btn gallery-btn" onclick="login()">进入图库</button>
               <div class="nav-links"><a href="/">返回首页</a></div>
           </div>
@@ -203,9 +194,7 @@ export default {
               </div>
           </div>
 
-          <div class="image-viewer" id="imageViewer" onclick="closeImageViewer()">
-              <img id="viewerImage" src="" alt="大图预览">
-          </div>
+          <div class="image-viewer" id="imageViewer" onclick="closeImageViewer()"><img id="viewerImage" src="" alt="大图预览"></div>
 
           <script>
               let pwd = sessionStorage.getItem('guestPwd') || '';
@@ -228,8 +217,7 @@ export default {
               }
 
               function logout() {
-                  sessionStorage.removeItem('guestPwd');
-                  pwd = '';
+                  sessionStorage.removeItem('guestPwd'); pwd = '';
                   document.getElementById('galleryBox').style.display = 'none';
                   document.getElementById('loginBox').style.display = 'block';
                   document.getElementById('guestPwd').value = '';
@@ -253,29 +241,16 @@ export default {
                   });
               }
 
-              function viewImage(url) {
-                  document.getElementById('viewerImage').src = url;
-                  document.getElementById('imageViewer').style.display = 'flex';
-              }
-              function closeImageViewer() {
-                  document.getElementById('imageViewer').style.display = 'none';
-                  document.getElementById('viewerImage').src = '';
-              }
+              function viewImage(url) { document.getElementById('viewerImage').src = url; document.getElementById('imageViewer').style.display = 'flex'; }
+              function closeImageViewer() { document.getElementById('imageViewer').style.display = 'none'; document.getElementById('viewerImage').src = ''; }
               
               function copyLink(text) {
-                  if (navigator.clipboard && window.isSecureContext) {
-                      navigator.clipboard.writeText(text).then(() => alert('已复制图片直链！')).catch(() => fallbackCopy(text));
-                  } else {
-                      fallbackCopy(text);
-                  }
+                  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(() => alert('已复制直链！')).catch(() => fallbackCopy(text));
+                  else fallbackCopy(text);
               }
               function fallbackCopy(text) {
-                  const input = document.createElement('input');
-                  input.value = text;
-                  document.body.appendChild(input);
-                  input.select();
-                  try { document.execCommand('copy'); alert('已复制图片直链！'); } catch(e) { alert('复制失败，请手动复制'); }
-                  document.body.removeChild(input);
+                  const input = document.createElement('input'); input.value = text; document.body.appendChild(input);
+                  input.select(); try{ document.execCommand('copy'); alert('已复制直链！'); }catch(e){} document.body.removeChild(input);
               }
           </script>
       </body></html>`;
@@ -290,9 +265,7 @@ export default {
           
           <div class="glass-panel" id="loginBox">
               <h1>Admin Login</h1>
-              <div class="input-group">
-                  <input type="password" id="adminPwd" placeholder="请输入超级密码" onkeydown="if(event.key==='Enter') login()">
-              </div>
+              <div class="input-group"><input type="password" id="adminPwd" placeholder="请输入超级密码" onkeydown="if(event.key==='Enter') login()"></div>
               <button class="submit-btn" onclick="login()">登入控制台</button>
               <div class="nav-links"><a href="/">返回游客首页</a></div>
           </div>
@@ -313,37 +286,46 @@ export default {
                           <div class="input-group">
                               <input type="text" name="icon_name" required placeholder="图标名称 (如 emby)" autocomplete="off">
                           </div>
+                          <div class="input-group">
+                              <input type="text" name="category" placeholder="分类合集 (选填，如: 影音)" autocomplete="off">
+                          </div>
                           <label for="admin-file-upload" class="file-upload-label" id="admin-file-name-display">选择图片 (PNG/JPG)</label>
                           <input id="admin-file-upload" type="file" name="file" accept="image/*" required style="display:none;">
                           <button type="submit" class="submit-btn" id="adminSubmitBtn">上传至管理区</button>
                       </form>
-                      <div class="nav-links" style="text-align:center; margin-top:20px;">
-                          <a href="${hostUrl}/admin.json" target="_blank">📄 专属 Admin JSON</a>
-                      </div>
                   </div>
                   
                   <div style="flex:2; text-align:left;">
-                      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
                           <h3 style="margin:0; color:#00f2fe; font-size:16px;">🗂️ 图标数据库管理</h3>
-                          <button onclick="loadList()" style="background:transparent; border:1px solid #00f2fe; color:#00f2fe; border-radius:6px; cursor:pointer; padding: 4px 15px; font-size: 13px; white-space: nowrap; transition:0.3s;">刷新列表</button>
+                          <button onclick="loadList()" style="background:transparent; border:1px solid #00f2fe; color:#00f2fe; border-radius:6px; cursor:pointer; padding: 4px 15px; font-size: 13px; transition:0.3s;">刷新列表</button>
                       </div>
+
+                      <div class="copy-box" style="margin-bottom: 10px;">
+                          <input type="text" id="adminJsonLink" readonly value="${hostUrl}/admin.json">
+                          <button class="copy-btn" onclick="copyText('adminJsonLink')">复制合集订阅</button>
+                      </div>
+
+                      <div class="category-tabs" id="adminCategoryTabs" style="display:none;"></div>
+
                       <div class="table-container">
                           <table>
-                              <thead><tr><th>预览</th><th>图标名称</th><th>归属</th><th>操作</th></tr></thead>
-                              <tbody id="iconListBody"><tr><td colspan="4" style="text-align:center;">加载中...</td></tr></tbody>
+                              <thead><tr><th>预览</th><th>合集</th><th>名称</th><th>归属</th><th>操作</th></tr></thead>
+                              <tbody id="iconListBody"><tr><td colspan="5" style="text-align:center;">加载中...</td></tr></tbody>
                           </table>
                       </div>
                   </div>
               </div>
           </div>
 
-          <div class="image-viewer" id="imageViewer" onclick="closeImageViewer()">
-              <img id="viewerImage" src="" alt="大图预览">
-          </div>
+          <div class="image-viewer" id="imageViewer" onclick="closeImageViewer()"><img id="viewerImage" src="" alt="大图预览"></div>
 
           <script>
               let pwd = sessionStorage.getItem('adminPwd') || '';
-              if(pwd) { login(pwd); }
+              let allAdminData =[];
+              let currentCat = '全部';
+
+              if(pwd) login(pwd);
 
               async function login(savedPwd) {
                   const inputPwd = savedPwd || document.getElementById('adminPwd').value;
@@ -354,7 +336,9 @@ export default {
                       pwd = inputPwd;
                       document.getElementById('loginBox').style.display = 'none';
                       document.getElementById('dashboard').style.display = 'block';
-                      renderList(await res.json());
+                      allAdminData = await res.json();
+                      renderTabs();
+                      renderTable();
                   } else {
                       if(!savedPwd) alert('密码错误');
                       sessionStorage.removeItem('adminPwd');
@@ -362,8 +346,7 @@ export default {
               }
 
               function logout() {
-                  sessionStorage.removeItem('adminPwd');
-                  pwd = '';
+                  sessionStorage.removeItem('adminPwd'); pwd = '';
                   document.getElementById('dashboard').style.display = 'none';
                   document.getElementById('loginBox').style.display = 'block';
                   document.getElementById('adminPwd').value = '';
@@ -372,91 +355,96 @@ export default {
               async function loadList() {
                   const res = await fetch('/api/admin/list', { headers: { 'Authorization': pwd } });
                   if(res.ok) {
-                      renderList(await res.json());
-                  } else if(res.status === 401) {
-                      alert('认证失效，请重新登录');
-                      logout();
-                  }
+                      allAdminData = await res.json();
+                      renderTabs();
+                      renderTable();
+                  } else if(res.status === 401) { alert('认证失效'); logout(); }
               }
 
-              function renderList(data) {
-                  const tbody = document.getElementById('iconListBody');
-                  tbody.innerHTML = '';
-                  if(data.length === 0) return tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#888;">数据库空空如也</td></tr>';
+              function renderTabs() {
+                  const tabsDiv = document.getElementById('adminCategoryTabs');
+                  // 获取所有独特的分类，并主动过滤掉“默认”这个词
+                  let rawCategories =[...new Set(allAdminData.map(item => item.category))];
+                  let filteredCategories = rawCategories.filter(c => c !== '默认');
                   
-                  data.forEach(item => {
-                      const tr = document.createElement('tr');
-                      const roleTag = item.role === 'admin' ? '<span style="color:#00f2fe;font-weight:bold;">Admin</span>' : '<span style="color:#aaa">Guest</span>';
-                      
-                      tr.innerHTML = \`
-                          <td><img src="\${item.url}" class="icon-preview" loading="lazy" onclick="viewImage('\${item.url}')" title="点击查看大图"></td>
-                          <td><code>\${item.name}</code></td>
-                          <td>\${roleTag}</td>
-                          <td>
-                              <div style="display:flex; gap:6px; flex-wrap:nowrap;">
-                                  <button class="submit-btn outline" style="padding: 5px 8px; margin: 0; min-width: 44px;" onclick="copyLink('\${item.url}')">复制</button>
-                                  <button class="submit-btn danger" style="padding: 5px 8px; margin: 0; min-width: 44px;" onclick="deleteIcon('\${item.key}', this)">删除</button>
-                              </div>
-                          </td>
-                      \`;
-                      tbody.appendChild(tr);
-                  });
+                  const categories = ['全部', ...filteredCategories];
+                  
+                  // 如果除了“全部”没有别的分类了，直接隐藏整个 Tab 栏，保持极其清爽
+                  if (categories.length <= 1) {
+                      tabsDiv.style.display = 'none';
+                      tabsDiv.innerHTML = '';
+                  } else {
+                      tabsDiv.style.display = 'flex';
+                      tabsDiv.innerHTML = categories.map(c => 
+                          \`<button class="tab-btn \${currentCat === c ? 'active' : ''}" onclick="switchCat('\${c}')">\${c}</button>\`
+                      ).join('');
+                  }
               }
 
-              function viewImage(url) {
-                  document.getElementById('viewerImage').src = url;
-                  document.getElementById('imageViewer').style.display = 'flex';
-              }
-              function closeImageViewer() {
-                  document.getElementById('imageViewer').style.display = 'none';
-                  document.getElementById('viewerImage').src = '';
-              }
-              
-              function copyLink(text) {
-                  if (navigator.clipboard && window.isSecureContext) {
-                      navigator.clipboard.writeText(text).then(() => alert('已复制图片直链！')).catch(() => fallbackCopy(text));
+              function switchCat(cat) {
+                  currentCat = cat;
+                  renderTabs();
+                  renderTable();
+                  
+                  const linkInput = document.getElementById('adminJsonLink');
+                  if(cat === '全部') {
+                      linkInput.value = '${hostUrl}/admin.json';
                   } else {
-                      fallbackCopy(text);
+                      linkInput.value = '${hostUrl}/admin/' + encodeURIComponent(cat) + '.json';
                   }
+              }
+
+              function renderTable() {
+                  const tbody = document.getElementById('iconListBody');
+                  const filtered = currentCat === '全部' ? allAdminData : allAdminData.filter(i => i.category === currentCat);
+                  
+                  if(filtered.length === 0) return tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">数据库空空如也</td></tr>';
+                  
+                  tbody.innerHTML = filtered.map(item => {
+                      const roleTag = item.role === 'admin' ? '<span style="color:#00f2fe;font-weight:bold;">Admin</span>' : '<span style="color:#aaa">Guest</span>';
+                      // 如果是“默认”合集，表格里只显示低调的横线，不再喧宾夺主
+                      const catDisplay = item.category === '默认' ? '<span style="color:#555;">-</span>' : \`<span class="cat-tag">\${item.category}</span>\`;
+                      
+                      return \`
+                          <tr>
+                              <td><img src="\${item.url}" class="icon-preview" loading="lazy" onclick="viewImage('\${item.url}')"></td>
+                              <td>\${catDisplay}</td>
+                              <td><code>\${item.name}</code></td>
+                              <td>\${roleTag}</td>
+                              <td>
+                                  <div style="display:flex; gap:6px; flex-wrap:nowrap;">
+                                      <button class="submit-btn outline" style="padding: 5px 8px; margin: 0; min-width: 44px;" onclick="copyLink('\${item.url}')">复制</button>
+                                      <button class="submit-btn danger" style="padding: 5px 8px; margin: 0; min-width: 44px;" onclick="deleteIcon('\${item.key}', this)">删除</button>
+                                  </div>
+                              </td>
+                          </tr>
+                      \`;
+                  }).join('');
+              }
+
+              function viewImage(url) { document.getElementById('viewerImage').src = url; document.getElementById('imageViewer').style.display = 'flex'; }
+              function closeImageViewer() { document.getElementById('imageViewer').style.display = 'none'; document.getElementById('viewerImage').src = ''; }
+              
+              function copyText(id) { document.getElementById(id).select(); document.execCommand('copy'); alert('专属合集订阅复制成功！'); }
+              function copyLink(text) {
+                  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(() => alert('已复制直链！')).catch(() => fallbackCopy(text));
+                  else fallbackCopy(text);
               }
               function fallbackCopy(text) {
-                  const input = document.createElement('input');
-                  input.value = text;
-                  document.body.appendChild(input);
-                  input.select();
-                  try { document.execCommand('copy'); alert('已复制图片直链！'); } catch(e) { alert('复制失败，请手动复制'); }
-                  document.body.removeChild(input);
+                  const input = document.createElement('input'); input.value = text; document.body.appendChild(input);
+                  input.select(); try{ document.execCommand('copy'); alert('已复制直链！'); }catch(e){} document.body.removeChild(input);
               }
 
               async function deleteIcon(key, btnElement) {
-                  if(!confirm('确定要彻底删除该图标吗？\\n(如果关联了TG通知，机器人也会同步撤回该消息)')) return;
-                  
-                  btnElement.disabled = true;
-                  btnElement.innerText = '删除中...';
+                  if(!confirm('确定要彻底删除该图标吗？')) return;
+                  btnElement.disabled = true; btnElement.innerText = '中...';
 
                   const res = await fetch('/api/admin/delete', {
-                      method: 'POST',
-                      headers: { 'Authorization': pwd, 'Content-Type': 'application/json' },
+                      method: 'POST', headers: { 'Authorization': pwd, 'Content-Type': 'application/json' },
                       body: JSON.stringify({ key })
                   });
-                  
-                  if(res.ok) { 
-                      const row = btnElement.closest('tr');
-                      row.style.opacity = '0';
-                      setTimeout(() => {
-                          row.remove();
-                          if(document.getElementById('iconListBody').children.length === 0) {
-                              document.getElementById('iconListBody').innerHTML = '<tr><td colspan="4" style="text-align:center; color:#888;">数据库空空如也</td></tr>';
-                          }
-                      }, 300);
-                  } else if (res.status === 401) {
-                      alert('认证失效，请重新登录');
-                      logout();
-                  } else { 
-                      alert('❌ 删除失败'); 
-                      btnElement.disabled = false;
-                      btnElement.innerText = '删除';
-                  }
+                  if(res.ok) { loadList(); } 
+                  else { alert('❌ 删除失败'); btnElement.disabled = false; btnElement.innerText = '删除'; }
               }
 
               const adminFileInput = document.getElementById('admin-file-upload');
@@ -475,8 +463,7 @@ export default {
                       formData.append('password', pwd); 
                       const res = await fetch('/api/upload?role=admin', { method: 'POST', body: formData });
                       if(res.ok) {
-                          const data = await res.json();
-                          alert('✅ 上传成功！\\n图片直链: ' + data.imgUrl);
+                          alert('✅ 上传成功！');
                           e.target.reset(); adminDisplay.textContent = '选择图片 (PNG/JPG)';
                           loadList(); 
                       } else { alert('❌ 上传失败'); }
@@ -492,41 +479,63 @@ export default {
     // ==========================================
     function parseKvValue(rawValue) {
         if (!rawValue) return { url: null, msgId: null, chatId: null };
-        try {
-            const parsed = JSON.parse(rawValue);
-            return { url: parsed.url, msgId: parsed.msgId, chatId: parsed.chatId };
-        } catch (e) {
-            return { url: rawValue, msgId: null, chatId: null };
-        }
+        try { const parsed = JSON.parse(rawValue); return { url: parsed.url, msgId: parsed.msgId, chatId: parsed.chatId }; } 
+        catch (e) { return { url: rawValue, msgId: null, chatId: null }; }
     }
 
     // ==========================================
-    // 📡 接口 1：生成 JSON 订阅 
+    // 📡 接口 1：生成 JSON 订阅
     // ==========================================
-    if (request.method === 'GET' && (path === '/guest.json' || path === '/admin.json')) {
-      const isGuest = path === '/guest.json';
-      const prefix = isGuest ? 'guest:' : 'admin:';
-      const libName = isGuest ? '专用共享图标库' : '我的专属图标库 (Admin)';
-      
-      try {
-        const list = await env.ICON_KV.list({ prefix: prefix });
-        let iconArray =[];
-        
-        for (const keyObj of list.keys) {
-          const rawValue = await env.ICON_KV.get(keyObj.name);
-          const { url } = parseKvValue(rawValue);
-          if (url) {
-              const cleanName = keyObj.name.replace(prefix, '');
-              iconArray.push({ "name": cleanName, "url": url });
+    if (request.method === 'GET') {
+      let isGuest = false;
+      let isAdmin = false;
+      let reqCategory = null;
+
+      if (path === '/guest.json') {
+          isGuest = true;
+      } 
+      else if (path === '/admin.json') {
+          isAdmin = true;
+      } 
+      else if (path.startsWith('/admin/') && path.endsWith('.json')) {
+          isAdmin = true;
+          reqCategory = decodeURIComponent(path.slice(7, -5)); 
+      }
+
+      if (isGuest || isAdmin) {
+          const prefix = isGuest ? 'guest:' : 'admin:';
+          let libName = isGuest ? '专用共享图标库' : '我的专属图标库 (Admin)';
+          if (reqCategory && !isGuest) libName += ` - ${reqCategory}合集`;
+          
+          try {
+            let iconArray =[];
+            let listComplete = false;
+            let cursor = undefined;
+            
+            while (!listComplete) {
+                const list = await env.ICON_KV.list({ prefix: prefix, cursor: cursor });
+                for (const keyObj of list.keys) {
+                  const parts = keyObj.name.split(':');
+                  const itemCategory = parts.length >= 3 ? parts[1] : '默认';
+                  const cleanName = parts.length >= 3 ? parts.slice(2).join(':') : parts[1];
+
+                  if (!isGuest && reqCategory && itemCategory !== reqCategory) continue;
+
+                  const rawValue = await env.ICON_KV.get(keyObj.name);
+                  const { url } = parseKvValue(rawValue);
+                  if (url) iconArray.push({ "name": cleanName, "url": url });
+                }
+                listComplete = list.list_complete;
+                cursor = list.cursor;
+            }
+            
+            const finalJson = { "name": libName, "description": "基于 Cloudflare Workers 自建的图标分类分发库", "icons": iconArray };
+            return new Response(JSON.stringify(finalJson, null, 2), {
+              headers: { 'Content-Type': 'application/json;charset=UTF-8', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache' }
+            });
+          } catch (e) {
+            return new Response('{"error":"读取数据失败"}', { status: 500, headers: {'Content-Type': 'application/json;charset=UTF-8'} });
           }
-        }
-        
-        const finalJson = { "name": libName, "description": "基于 Cloudflare Workers 自建的图标分发库", "icons": iconArray };
-        return new Response(JSON.stringify(finalJson, null, 2), {
-          headers: { 'Content-Type': 'application/json;charset=UTF-8', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache' }
-        });
-      } catch (e) {
-        return new Response('{"error":"读取数据失败"}', { status: 500, headers: {'Content-Type': 'application/json;charset=UTF-8'} });
       }
     }
 
@@ -536,16 +545,52 @@ export default {
     if (request.method === 'GET' && path === '/api/guest/list') {
       if (request.headers.get('Authorization') !== env.GUEST_PASSWORD) return new Response('Unauthorized', { status: 401 });
       
-      const list = await env.ICON_KV.list({ prefix: 'guest:' });
       let result =[];
-      for (const keyObj of list.keys) {
-        const rawValue = await env.ICON_KV.get(keyObj.name);
-        const { url } = parseKvValue(rawValue);
-        if(url) {
-            const cleanName = keyObj.name.replace('guest:', '');
-            result.push({ name: cleanName, url: url });
-        }
+      let listComplete = false;
+      let cursor = undefined;
+      while (!listComplete) {
+          const list = await env.ICON_KV.list({ prefix: 'guest:', cursor: cursor });
+          for (const keyObj of list.keys) {
+            const rawValue = await env.ICON_KV.get(keyObj.name);
+            const { url } = parseKvValue(rawValue);
+            if(url) {
+                const parts = keyObj.name.split(':');
+                const cleanName = parts[parts.length - 1];
+                result.push({ key: keyObj.name, name: cleanName, url: url });
+            }
+          }
+          listComplete = list.list_complete;
+          cursor = list.cursor;
       }
+      return new Response(JSON.stringify(result), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }});
+    }
+
+    // ==========================================
+    // 🛠️ 接口 4：网页管理员 API 
+    // ==========================================
+    if (request.method === 'GET' && path === '/api/admin/list') {
+      if (request.headers.get('Authorization') !== env.ADMIN_PASSWORD) return new Response('Unauthorized', { status: 401 });
+      
+      let result =[];
+      let listComplete = false;
+      let cursor = undefined;
+      while (!listComplete) {
+          const list = await env.ICON_KV.list({ cursor: cursor });
+          for (const keyObj of list.keys) {
+            const rawValue = await env.ICON_KV.get(keyObj.name);
+            const { url } = parseKvValue(rawValue);
+            if(url) {
+                const parts = keyObj.name.split(':');
+                const role = parts[0];
+                const category = parts.length >= 3 ? parts[1] : '默认';
+                const cleanName = parts.length >= 3 ? parts.slice(2).join(':') : parts[1];
+                result.push({ key: keyObj.name, name: cleanName, category: category, role: role, url: url });
+            }
+          }
+          listComplete = list.list_complete;
+          cursor = list.cursor;
+      }
+      result.sort((a, b) => a.role.localeCompare(b.role));
       return new Response(JSON.stringify(result), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }});
     }
 
@@ -557,71 +602,54 @@ export default {
       const formData = await request.formData();
       const password = formData.get('password');
       const iconName = formData.get('icon_name');
+      let category = formData.get('category') || '';
       const file = formData.get('file');
+
+      if (role === 'guest') category = '';
 
       if (role === 'guest' && password !== env.GUEST_PASSWORD) return Response.json({ error: '游客密码错误' }, { status: 403 });
       if (role === 'admin' && password !== env.ADMIN_PASSWORD) return Response.json({ error: '管理员密码错误' }, { status: 403 });
       if (!file || !iconName) return Response.json({ error: '缺少文件或名称' }, { status: 400 });
 
+      category = category.trim().replace(/[:/]/g, ''); 
+      const kvKey = category ? `${role}:${category}:${iconName}` : `${role}:${iconName}`;
+      
       const fileExt = file.name.split('.').pop() || 'png';
-      const dir = role === 'guest' ? 'guest' : 'admin';
-      const r2Path = `${dir}/${iconName}_${Date.now()}.${fileExt}`;
+      const r2Path = `${role}/${iconName}_${Date.now()}.${fileExt}`;
       await env.ICON_R2.put(r2Path, file);
 
-      const publicUrl = `${env.R2_PUBLIC_URL}/${r2Path}`;
-      const kvKey = `${role}:${iconName}`;
-
-      let tgMsgId = null;
-      let tgChatId = null;
-      const roleName = role === 'admin' ? '管理员后台' : '专用图标区';
+      const publicUrl = `${hostUrl}/${r2Path}`;
+      let tgMsgId = null; let tgChatId = null;
       
       const primaryTargetId = env.ADMIN_CHAT_ID ? String(env.ADMIN_CHAT_ID).split(',')[0].trim() : null;
-
       try {
         if (primaryTargetId) {
+            const roleName = role === 'admin' ? '管理后台' : '游客区';
+            const catText = role === 'admin' && category ? `\n合集: <code>${category}</code>` : '';
+            
             const tgRes = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
-              method: 'POST', 
-              headers: { 'Content-Type': 'application/json' },
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ 
                   chat_id: primaryTargetId, 
-                  text: `🔔 <b>来自[${roleName}]的图标上传</b>\n名称: <code>${iconName}</code>\n链接: ${publicUrl}`, 
+                  text: `🔔 <b>网页端上传[${roleName}]</b>\n名称: <code>${iconName}</code>${catText}\n链接: ${publicUrl}`, 
                   parse_mode: 'HTML',
-                  // 移除 disable_web_page_preview，让 TG 自动显示图片预览
-                  reply_markup: {
-                      inline_keyboard: [[{ text: "🗑️ 从数据库中彻底删除", callback_data: `del:${role}:${iconName}` }]]
-                  }
+                  reply_markup: { inline_keyboard: [[{ text: "🗑️ 从数据库中彻底删除", callback_data: `del_kv:${kvKey}` }]] }
               })
             });
             if (tgRes.ok) {
                 const tgData = await tgRes.json();
-                tgMsgId = tgData.result.message_id;
-                tgChatId = tgData.result.chat.id;
+                tgMsgId = tgData.result.message_id; tgChatId = tgData.result.chat.id;
             }
         }
-      } catch (e) { console.log("TG通知发送失败", e); }
+      } catch (e) {}
 
-      const kvValueObj = { url: publicUrl, msgId: tgMsgId, chatId: tgChatId };
-      await env.ICON_KV.put(kvKey, JSON.stringify(kvValueObj));
-
-      return Response.json({ success: true, iconName: iconName, imgUrl: publicUrl, jsonUrl: `${hostUrl}/${role}.json` });
-    }
-
-    // ==========================================
-    // 🛠️ 接口 4：网页管理员 API 
-    // ==========================================
-    if (request.method === 'GET' && path === '/api/admin/list') {
-      if (request.headers.get('Authorization') !== env.ADMIN_PASSWORD) return new Response('Unauthorized', { status: 401 });
-      const list = await env.ICON_KV.list();
-      let result =[];
-      for (const keyObj of list.keys) {
-        const rawValue = await env.ICON_KV.get(keyObj.name);
-        const { url } = parseKvValue(rawValue);
-        const role = keyObj.name.startsWith('admin:') ? 'admin' : 'guest';
-        const cleanName = keyObj.name.replace(`${role}:`, '');
-        if(url) result.push({ key: keyObj.name, name: cleanName, role: role, url: url });
-      }
-      result.sort((a, b) => a.role.localeCompare(b.role));
-      return new Response(JSON.stringify(result), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }});
+      await env.ICON_KV.put(kvKey, JSON.stringify({ url: publicUrl, msgId: tgMsgId, chatId: tgChatId }));
+      
+      const finalJsonUrl = (role === 'admin' && category) 
+          ? `${hostUrl}/admin/${encodeURIComponent(category)}.json` 
+          : `${hostUrl}/${role}.json`;
+          
+      return Response.json({ success: true, iconName: iconName, imgUrl: publicUrl, jsonUrl: finalJsonUrl });
     }
 
     if (request.method === 'POST' && path === '/api/admin/delete') {
@@ -632,15 +660,14 @@ export default {
       if (rawValue) {
         const { url, msgId, chatId } = parseKvValue(rawValue);
         if (url) {
-            const r2Path = url.replace(`${env.R2_PUBLIC_URL}/`, '');
+            const urlObj = new URL(url);
+            const r2Path = urlObj.pathname.substring(1);
             await env.ICON_R2.delete(r2Path);
         }
         await env.ICON_KV.delete(key);
-
         if (msgId && chatId) {
             await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/deleteMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat_id: chatId, message_id: msgId })
             }).catch(() => {});
         }
@@ -649,7 +676,7 @@ export default {
     }
 
     // ==========================================
-    // 🤖 接口 5：TG Bot 深度交互引擎
+    // 🤖 接口 5：TG Bot 交互引擎
     // ==========================================
     if (request.method === 'POST' && path === `/webhook/tg/${env.TG_BOT_TOKEN}`) {
       const update = await request.json();
@@ -657,145 +684,129 @@ export default {
 
       const menuText = `👋 <b>欢迎使用专属图标管理机器人</b>
 
-🖼️ <b>如何上传？</b>
-直接发送一张图片给我，并在发送时的<b>“添加文字说明 (Caption)”</b>处填写图标名称（例如 <code>wechat</code>）。
+🖼️ <b>如何指定合集上传？</b>
+直接发送图片给我，在<b>“文字说明(Caption)”</b>处填写：
+<code>合集名称：图标名称</code>
+*(例如：<code>影音：emby</code>，不加冒号则默认不分类)*
 
 🌐 <b>网页管理控制台：</b>
 ${hostUrl}/admin
 
-🔗 <b>订阅 JSON 链接：</b>
+🔗 <b>总库订阅链接：</b>
 • <b>游客订阅：</b> ${hostUrl}/guest.json
 • <b>管理订阅：</b> ${hostUrl}/admin.json`;
 
       const menuMarkup = {
-          inline_keyboard: [[
-                  { text: "📊 查看后台数据", callback_data: "stats" },
-                  { text: "🗑️ 快捷删除指令", callback_data: "help_del" }
-              ]
+          inline_keyboard: [[{ text: "📊 查看后台数据", callback_data: "stats" }, { text: "🗑️ 快捷删除指令", callback_data: "help_del" }]
           ]
       };
 
-      // --- 1. 处理内联按钮回调 ---
       if (update.callback_query) {
         const cb = update.callback_query;
         const data = cb.data;
         const chatRoomId = String(cb.message.chat.id);
         const userId = String(cb.from.id);
 
-        if (allowedAdminIds.length > 0 && !allowedAdminIds.includes(chatRoomId) && !allowedAdminIds.includes(userId)) {
-            return new Response('OK');
-        }
+        if (allowedAdminIds.length > 0 && !allowedAdminIds.includes(chatRoomId) && !allowedAdminIds.includes(userId)) return new Response('OK');
 
         if (data === 'stats') {
-            const list = await env.ICON_KV.list();
             let adminCount = 0, guestCount = 0;
-            for (const keyObj of list.keys) {
-                if (keyObj.name.startsWith('admin:')) adminCount++;
-                else if (keyObj.name.startsWith('guest:')) guestCount++;
+            let catCounts = {};
+            
+            let listComplete = false;
+            let cursor = undefined;
+            while (!listComplete) {
+                const list = await env.ICON_KV.list({ cursor: cursor });
+                for (const keyObj of list.keys) {
+                    const parts = keyObj.name.split(':');
+                    const role = parts[0];
+                    if (role === 'admin') {
+                        adminCount++;
+                        // 如果有专属合集，才纳入分类统计，不统计“默认”
+                        if (parts.length >= 3) {
+                            const cat = parts[1];
+                            catCounts[cat] = (catCounts[cat] || 0) + 1;
+                        }
+                    } else if (role === 'guest') {
+                        guestCount++;
+                    }
+                }
+                listComplete = list.list_complete;
+                cursor = list.cursor;
             }
-            const statsText = `📊 <b>后台数据库实时统计</b>\n\n🛡️ Admin 图标数：<code>${adminCount}</code> 个\n🌍 Guest 图标数：<code>${guestCount}</code> 个\n\n📦 总计收录：<code>${adminCount + guestCount}</code> 个图标\n\n<i>数据已同步至最新。</i>`;
+
+            let catText = "";
+            const sortedCats = Object.keys(catCounts).sort();
+            for (const cat of sortedCats) {
+                catText += `├ <code>${cat}</code> : ${catCounts[cat]} 个\n`;
+            }
+
+            const statsText = `📊 <b>后台数据库实时统计</b>\n\n🛡️ <b>Admin 核心图标库</b> (共 <code>${adminCount}</code> 个)\n${catText}\n🌍 <b>Guest 游客上传库</b> (共 <code>${guestCount}</code> 个)\n\n📦 <b>全库总计收录：</b> <code>${adminCount + guestCount}</code> 个\n\n<i>数据已同步至最新。</i>`;
             
             await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/editMessageText`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                chat_id: chatRoomId, message_id: cb.message.message_id, text: statsText, parse_mode: 'HTML',
-                reply_markup: { inline_keyboard: [[{ text: "🔙 返回主菜单", callback_data: "menu" }]] }
-              })
+              body: JSON.stringify({ chat_id: chatRoomId, message_id: cb.message.message_id, text: statsText, parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "🔙 返回主菜单", callback_data: "menu" }]] }})
             });
-            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/answerCallbackQuery`, { 
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ callback_query_id: cb.id }) 
-            });
+            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/answerCallbackQuery`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ callback_query_id: cb.id }) });
             return new Response('OK');
         }
 
         if (data === 'menu') {
             await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/editMessageText`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                  chat_id: chatRoomId, message_id: cb.message.message_id, 
-                  text: menuText, parse_mode: 'HTML', 
-                  disable_web_page_preview: true, // 保留：禁止生成欢迎菜单的网页大图预览
-                  reply_markup: menuMarkup 
-              })
+              body: JSON.stringify({ chat_id: chatRoomId, message_id: cb.message.message_id, text: menuText, parse_mode: 'HTML', disable_web_page_preview: true, reply_markup: menuMarkup })
             });
-            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/answerCallbackQuery`, { 
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ callback_query_id: cb.id }) 
-            });
+            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/answerCallbackQuery`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ callback_query_id: cb.id }) });
             return new Response('OK');
         }
 
         if (data === 'help_del') {
             await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/answerCallbackQuery`, {
              method: 'POST', headers: { 'Content-Type': 'application/json' },
-             body: JSON.stringify({ 
-                 callback_query_id: cb.id, 
-                 text: "💡 删除教学：\n\n请直接在聊天框向我发送指令：\n/del 图标名称\n\n例如，要彻底删除 wechat 图标，请发送：\n/del wechat", 
-                 show_alert: true 
-             })
+             body: JSON.stringify({ callback_query_id: cb.id, text: "💡 彻底删除指令：\n\n请发送：/del 图标名称\n\n系统会自动在全库(无视合集)检索该名称并删除它！", show_alert: true })
             });
             return new Response('OK');
         }
 
-        if (data.startsWith('del:')) {
-          const parts = data.split(':');
-          const role = parts[1];
-          const iconName = parts.slice(2).join(':'); 
-          const kvKey = `${role}:${iconName}`;
-          
+        if (data.startsWith('del_kv:')) {
+          const kvKey = data.replace('del_kv:', '');
           const rawValue = await env.ICON_KV.get(kvKey);
+          
           if (rawValue) {
             const { url } = parseKvValue(rawValue);
             if (url) {
-              const r2Path = url.replace(`${env.R2_PUBLIC_URL}/`, '');
+              const urlObj = new URL(url);
+              const r2Path = urlObj.pathname.substring(1);
               await env.ICON_R2.delete(r2Path);
             }
             await env.ICON_KV.delete(kvKey);
-            
             await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/editMessageText`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ chat_id: cb.message.chat.id, message_id: cb.message.message_id, text: `🗑️ 图标 [${iconName}] 已通过机器人撤回并彻底删除。` })
+              body: JSON.stringify({ chat_id: cb.message.chat.id, message_id: cb.message.message_id, text: `🗑️ 图标[${kvKey}] 已撤回并彻底删除。` })
             });
           } else {
              await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/editMessageText`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ chat_id: cb.message.chat.id, message_id: cb.message.message_id, text: `⚠️ 图标 [${iconName}] 不存在或已被删除。` })
+              body: JSON.stringify({ chat_id: cb.message.chat.id, message_id: cb.message.message_id, text: `⚠️ 数据库中找不到此图标。` })
             });
           }
-          await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/answerCallbackQuery`, { 
-              method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-              body: JSON.stringify({ callback_query_id: cb.id, text: "清理完成！" }) 
-          });
+          await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/answerCallbackQuery`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ callback_query_id: cb.id, text: "清理完成！" }) });
         }
         return new Response('OK');
       }
 
-      // --- 2. 处理聊天发送的消息 ---
       if (update.message) {
         const chatRoomId = String(update.message.chat.id);
         const userId = String(update.message.from.id);
         
-        if (allowedAdminIds.length > 0 && !allowedAdminIds.includes(chatRoomId) && !allowedAdminIds.includes(userId)) {
-            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ chat_id: chatRoomId, text: "⛔ 权限不足：你不在管理员白名单中。" })
-            });
-            return new Response('OK');
-        }
+        if (allowedAdminIds.length > 0 && !allowedAdminIds.includes(chatRoomId) && !allowedAdminIds.includes(userId)) return new Response('OK');
 
         const msgText = update.message.text || '';
 
         if (msgText === '/start' || msgText === '/help') {
            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                  chat_id: chatRoomId, 
-                  text: menuText, 
-                  parse_mode: 'HTML', 
-                  disable_web_page_preview: true, // 保留：发送欢迎语时同样取消网页预览图
-                  reply_markup: menuMarkup 
-              })
+              body: JSON.stringify({ chat_id: chatRoomId, text: menuText, parse_mode: 'HTML', disable_web_page_preview: true, reply_markup: menuMarkup })
            });
            return new Response('OK');
         }
@@ -804,35 +815,40 @@ ${hostUrl}/admin
             const targetName = msgText.replace('/del ', '').trim();
             if (!targetName) return new Response('OK');
 
-            let kvKey = targetName.includes(':') ? targetName : null;
+            let foundKey = null;
             let rawValue = null;
 
-            if (kvKey) {
-                rawValue = await env.ICON_KV.get(kvKey);
-            } else {
-                kvKey = `admin:${targetName}`;
-                rawValue = await env.ICON_KV.get(kvKey);
-                if (!rawValue) {
-                    kvKey = `guest:${targetName}`;
-                    rawValue = await env.ICON_KV.get(kvKey);
+            let listComplete = false;
+            let cursor = undefined;
+            while (!listComplete && !foundKey) {
+                const list = await env.ICON_KV.list({ cursor: cursor });
+                for (const keyObj of list.keys) {
+                    if (keyObj.name === targetName) { foundKey = keyObj.name; break; }
+                    const parts = keyObj.name.split(':');
+                    const cleanName = parts.length >= 3 ? parts.slice(2).join(':') : parts[1];
+                    if (cleanName === targetName) { foundKey = keyObj.name; break; }
                 }
+                listComplete = list.list_complete;
+                cursor = list.cursor;
             }
 
-            if (rawValue) {
+            if (foundKey) {
+                rawValue = await env.ICON_KV.get(foundKey);
                 const { url } = parseKvValue(rawValue);
                 if (url) {
-                  const r2Path = url.replace(`${env.R2_PUBLIC_URL}/`, '');
+                  const urlObj = new URL(url);
+                  const r2Path = urlObj.pathname.substring(1);
                   await env.ICON_R2.delete(r2Path);
                 }
-                await env.ICON_KV.delete(kvKey);
+                await env.ICON_KV.delete(foundKey);
                 await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
                   method: 'POST', headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ chat_id: chatRoomId, text: `✅ 成功从数据库彻底删除图标[${kvKey}]！` })
+                  body: JSON.stringify({ chat_id: chatRoomId, text: `✅ 成功从数据库删除: [${foundKey}]！` })
                 });
             } else {
                 await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
                   method: 'POST', headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ chat_id: chatRoomId, text: `⚠️ 找不到图标 [${targetName}]，可能已被删除或名称错误。` })
+                  body: JSON.stringify({ chat_id: chatRoomId, text: `⚠️ 找不到名称包含 [${targetName}] 的图标。` })
                 });
             }
             return new Response('OK');
@@ -841,32 +857,39 @@ ${hostUrl}/admin
         if (update.message.photo) {
           const photo = update.message.photo.pop(); 
           const fileId = photo.file_id;
-          const iconName = update.message.caption || `tg_icon_${Date.now()}`;
+          let caption = update.message.caption || `tg_icon_${Date.now()}`;
+          
+          let tgCategory = '';
+          let tgIconName = caption;
+          if (caption.includes(':') || caption.includes('：')) {
+              const parts = caption.split(/[:：]/);
+              tgCategory = parts[0].trim().replace(/[:/]/g, '');
+              tgIconName = parts.slice(1).join(':').trim();
+          }
+
           const role = 'admin'; 
-          const kvKey = `${role}:${iconName}`;
+          const kvKey = tgCategory ? `${role}:${tgCategory}:${tgIconName}` : `${role}:${tgIconName}`;
 
           try {
             const fileInfoRes = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/getFile?file_id=${fileId}`);
             const fileInfo = await fileInfoRes.json();
-            
             const imageRes = await fetch(`https://api.telegram.org/file/bot${env.TG_BOT_TOKEN}/${fileInfo.result.file_path}`);
             const imageBuffer = await imageRes.arrayBuffer();
 
-            const r2Path = `tg/${iconName}_${Date.now()}.png`;
+            const r2Path = `tg/${tgIconName}_${Date.now()}.png`;
             await env.ICON_R2.put(r2Path, imageBuffer);
-            const publicUrl = `${env.R2_PUBLIC_URL}/${r2Path}`;
+            const publicUrl = `${hostUrl}/${r2Path}`;
 
             let replyMsgId = null;
+            const catText = tgCategory ? `\n合集: <code>${tgCategory}</code>` : '';
+            
             const tgRes = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ 
                 chat_id: chatRoomId, 
-                text: `✅ <b>上传成功</b>\n名称: <code>${iconName}</code>\n直链: ${publicUrl}\n\n<i>(图标已自动归类至 Admin 库)</i>`, 
+                text: `✅ <b>上传成功</b>${catText}\n名称: <code>${tgIconName}</code>\n直链: ${publicUrl}\n\n<i>(已归类至 Admin 库)</i>`, 
                 parse_mode: 'HTML',
-                // 移除 disable_web_page_preview，让 TG 自动显示图片预览
-                reply_markup: {
-                  inline_keyboard: [[{ text: "🗑️ 从数据库中彻底删除", callback_data: `del:${role}:${iconName}` }]]
-                }
+                reply_markup: { inline_keyboard: [[{ text: "🗑️ 撤回并删除", callback_data: `del_kv:${kvKey}` }]] }
               })
             });
             
@@ -875,8 +898,7 @@ ${hostUrl}/admin
                 replyMsgId = tgData.result.message_id;
             }
 
-            const kvValueObj = { url: publicUrl, msgId: replyMsgId, chatId: chatRoomId };
-            await env.ICON_KV.put(kvKey, JSON.stringify(kvValueObj));
+            await env.ICON_KV.put(kvKey, JSON.stringify({ url: publicUrl, msgId: replyMsgId, chatId: chatRoomId }));
 
           } catch (err) {
             await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
@@ -887,6 +909,21 @@ ${hostUrl}/admin
         }
       }
       return new Response('OK');
+    }
+
+    // ==========================================
+    // 🟢 R2 图片静态回源代理 
+    // ==========================================
+    if (request.method === 'GET' && !path.startsWith('/api') && path !== '/' && path !== '/gallery' && path !== '/admin' && !path.endsWith('.json')) {
+        const r2Path = path.substring(1); 
+        const object = await env.ICON_R2.get(r2Path);
+        if (object) {
+            const headers = new Headers();
+            object.writeHttpMetadata(headers);
+            headers.set('etag', object.httpEtag);
+            headers.set('Cache-Control', 'public, max-age=31536000');
+            return new Response(object.body, { headers });
+        }
     }
 
     return new Response('Not Found', { status: 404 });
