@@ -258,7 +258,7 @@ export default {
     }
 
     // ==========================================
-    // 🛡️ 路由 3：管理员面板
+    // 🛡️ 路由 3：管理员面板 (智能表单联动)
     // ==========================================
     if (request.method === 'GET' && path === '/admin') {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>管理员控制台</title>${sharedCSS}</head><body>
@@ -287,7 +287,8 @@ export default {
                               <input type="text" name="icon_name" required placeholder="图标名称 (如 emby)" autocomplete="off">
                           </div>
                           <div class="input-group">
-                              <input type="text" name="category" placeholder="分类合集 (选填，如: 影音)" autocomplete="off">
+                              <!-- 提示词优化，增强用户引导 -->
+                              <input type="text" name="category" placeholder="分类合集 (自动跟随当前Tab，也可手动新建)" autocomplete="off">
                           </div>
                           <label for="admin-file-upload" class="file-upload-label" id="admin-file-name-display">选择图片 (PNG/JPG)</label>
                           <input id="admin-file-upload" type="file" name="file" accept="image/*" required style="display:none;">
@@ -363,13 +364,11 @@ export default {
 
               function renderTabs() {
                   const tabsDiv = document.getElementById('adminCategoryTabs');
-                  // 获取所有独特的分类，并主动过滤掉“默认”这个词
                   let rawCategories =[...new Set(allAdminData.map(item => item.category))];
                   let filteredCategories = rawCategories.filter(c => c !== '默认');
                   
                   const categories = ['全部', ...filteredCategories];
                   
-                  // 如果除了“全部”没有别的分类了，直接隐藏整个 Tab 栏，保持极其清爽
                   if (categories.length <= 1) {
                       tabsDiv.style.display = 'none';
                       tabsDiv.innerHTML = '';
@@ -387,10 +386,15 @@ export default {
                   renderTable();
                   
                   const linkInput = document.getElementById('adminJsonLink');
+                  const catInput = document.querySelector('input[name="category"]');
+                  
+                  // 核心联动：切换Tab时自动更新链接，并自动填入(或清空)分类输入框！
                   if(cat === '全部') {
                       linkInput.value = '${hostUrl}/admin.json';
+                      if(catInput) catInput.value = ''; // 点全部，默认清空分类，上传至总库
                   } else {
                       linkInput.value = '${hostUrl}/admin/' + encodeURIComponent(cat) + '.json';
+                      if(catInput) catInput.value = cat; // 自动填充当前合集名，方便直接上传
                   }
               }
 
@@ -402,7 +406,6 @@ export default {
                   
                   tbody.innerHTML = filtered.map(item => {
                       const roleTag = item.role === 'admin' ? '<span style="color:#00f2fe;font-weight:bold;">Admin</span>' : '<span style="color:#aaa">Guest</span>';
-                      // 如果是“默认”合集，表格里只显示低调的横线，不再喧宾夺主
                       const catDisplay = item.category === '默认' ? '<span style="color:#555;">-</span>' : \`<span class="cat-tag">\${item.category}</span>\`;
                       
                       return \`
@@ -464,7 +467,15 @@ export default {
                       const res = await fetch('/api/upload?role=admin', { method: 'POST', body: formData });
                       if(res.ok) {
                           alert('✅ 上传成功！');
-                          e.target.reset(); adminDisplay.textContent = '选择图片 (PNG/JPG)';
+                          e.target.reset(); 
+                          
+                          // 核心体验优化：上传重置表单后，如果当前在某个具体合集下，把合集名写回去，方便连续上传！
+                          const catInput = document.querySelector('input[name="category"]');
+                          if (currentCat !== '全部' && catInput) {
+                              catInput.value = currentCat;
+                          }
+                          
+                          adminDisplay.textContent = '选择图片 (PNG/JPG)';
                           loadList(); 
                       } else { alert('❌ 上传失败'); }
                   } catch(err) { alert('❌ 网络错误'); } finally { btn.textContent = '上传至管理区'; btn.disabled = false; }
@@ -484,7 +495,7 @@ export default {
     }
 
     // ==========================================
-    // 📡 接口 1：生成 JSON 订阅
+    // 📡 接口 1：生成 JSON 订阅 
     // ==========================================
     if (request.method === 'GET') {
       let isGuest = false;
@@ -722,7 +733,6 @@ ${hostUrl}/admin
                     const role = parts[0];
                     if (role === 'admin') {
                         adminCount++;
-                        // 如果有专属合集，才纳入分类统计，不统计“默认”
                         if (parts.length >= 3) {
                             const cat = parts[1];
                             catCounts[cat] = (catCounts[cat] || 0) + 1;
