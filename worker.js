@@ -29,7 +29,7 @@ export default {
     }
 
     // ==========================================
-    // 🎨 共享前端 CSS
+    // 🎨 共享前端 CSS & 主题切换组件
     // ==========================================
     const sharedCSS = `
       <style>
@@ -44,10 +44,11 @@ export default {
                               url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg stroke='rgba(255,255,255,0.035)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='30' cy='30' r='12'/%3E%3Cpolygon points='28,25 28,35 36,30'/%3E%3Crect x='80' y='20' width='18' height='24' rx='2'/%3E%3Cpath d='M80 26h18M80 32h18M80 38h18M84 20v24M94 20v24'/%3E%3Crect x='25' y='80' width='22' height='16' rx='2'/%3E%3Cpath d='M31 80l5-5l5 5M31 96h10'/%3E%3Ccircle cx='88' cy='88' r='12'/%3E%3Ccircle cx='88' cy='88' r='4'/%3E%3C/g%3E%3C/svg%3E"); 
             background-attachment: fixed; 
             color: #e0e6ed; 
+            transition: background-color 0.4s ease, color 0.4s ease;
         }
         
         .page-wrapper { padding: 5vh 20px; width: 100%; max-width: 1400px; margin: 0 auto; position: relative; }
-        .panel { background: rgba(15, 18, 25, 0.7); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(0, 242, 254, 0.15); border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0,242,254,0.05); }
+        .panel { background: rgba(15, 18, 25, 0.7); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(0, 242, 254, 0.15); border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0,242,254,0.05); transition: all 0.4s ease; }
         
         .login-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; padding: 40px 30px; text-align: center; z-index: 50; margin: 0; }
         .dashboard-panel { width: 100%; padding: 30px; margin: 0 auto; }
@@ -113,10 +114,63 @@ export default {
         @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         /* ==========================================
-           📱 移动端自适应
+           🌞 亮暗模式切换支持
+           ========================================== */
+        .theme-toggle { position: fixed; top: 25px; right: 25px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; width: 42px; height: 42px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: all 0.3s ease; }
+        .theme-toggle:hover { background: rgba(0, 242, 254, 0.2); border-color: #00f2fe; transform: scale(1.1); }
+        
+        body.light-mode {
+            background-color: #f0f4f8;
+            background-image: radial-gradient(circle at 15% 20%, rgba(0, 153, 255, 0.06) 0%, transparent 50%), 
+                              radial-gradient(circle at 85% 80%, rgba(0, 242, 254, 0.1) 0%, transparent 50%), 
+                              url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg stroke='rgba(0,102,255,0.05)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='30' cy='30' r='12'/%3E%3Cpolygon points='28,25 28,35 36,30'/%3E%3Crect x='80' y='20' width='18' height='24' rx='2'/%3E%3Cpath d='M80 26h18M80 32h18M80 38h18M84 20v24M94 20v24'/%3E%3Crect x='25' y='80' width='22' height='16' rx='2'/%3E%3Cpath d='M31 80l5-5l5 5M31 96h10'/%3E%3Ccircle cx='88' cy='88' r='12'/%3E%3Ccircle cx='88' cy='88' r='4'/%3E%3C/g%3E%3C/svg%3E");
+            color: #1e293b;
+        }
+        body.light-mode .theme-toggle { background: rgba(255,255,255,0.6); border-color: rgba(0, 153, 255, 0.2); color: #0077ff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        body.light-mode .theme-toggle:hover { background: #fff; border-color: #0077ff; box-shadow: 0 6px 20px rgba(0, 119, 255, 0.2); }
+        body.light-mode .panel { background: rgba(255, 255, 255, 0.75); border: 1px solid rgba(0, 153, 255, 0.2); box-shadow: 0 25px 50px rgba(0, 30, 80, 0.08), 0 0 40px rgba(0, 153, 255, 0.08); }
+        body.light-mode h1 { background: linear-gradient(135deg, #0f172a, #0077ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        body.light-mode .badge.guest { border-color: rgba(0,0,0,0.2); color: #64748b; background: rgba(0,0,0,0.05); }
+        body.light-mode .badge.admin { border-color: rgba(0, 119, 255, 0.3); color: #0077ff; background: rgba(0, 119, 255, 0.1); }
+        body.light-mode .input-group input { background: #fff; border-color: rgba(0, 119, 255, 0.2); color: #1e293b; }
+        body.light-mode .input-group input:focus { border-color: #0077ff; background: #fff; box-shadow: 0 0 15px rgba(0, 119, 255, 0.15); }
+        body.light-mode .file-upload-label { background: #fff; border-color: rgba(0, 119, 255, 0.2); color: #64748b; }
+        body.light-mode .file-upload-label:hover { background: rgba(0, 119, 255, 0.05); border-color: #0077ff; color: #0077ff; }
+        body.light-mode .submit-btn.outline { border-color: #0077ff; color: #0077ff; }
+        body.light-mode .submit-btn.outline:hover:not(:disabled) { background: rgba(0, 119, 255, 0.1); box-shadow: 0 0 10px rgba(0, 119, 255, 0.2); }
+        body.light-mode .submit-btn.outline[style*="color: white"] { border-color: #0077ff !important; color: #0077ff !important; }
+        body.light-mode .nav-links a { color: #0077ff; }
+        body.light-mode .table-container { background: rgba(255, 255, 255, 0.6); }
+        body.light-mode th { color: #0077ff; border-bottom-color: rgba(0,0,0,0.1); }
+        body.light-mode td { border-bottom-color: rgba(0,0,0,0.05); }
+        body.light-mode .name-box code { color: #1e293b !important; font-weight: 500;}
+        body.light-mode .name-box span { color: #0077ff !important; }
+        body.light-mode .admin-sidebar { background: rgba(255, 255, 255, 0.6); border: 1px solid rgba(0, 153, 255, 0.15); }
+        body.light-mode .admin-sidebar h3, body.light-mode .admin-main h3 { color: #0077ff !important; }
+        body.light-mode .tab-btn { background: #fff; border-color: rgba(0, 119, 255, 0.2); color: #64748b; }
+        body.light-mode .tab-btn.active { background: rgba(0, 119, 255, 0.1); border-color: #0077ff; color: #0077ff; }
+        body.light-mode .cat-tag { background: rgba(0, 119, 255, 0.1); color: #0077ff; }
+        body.light-mode .copy-box { background: #fff; border-color: rgba(0, 119, 255, 0.2); }
+        body.light-mode .copy-box input { color: #1e293b; }
+        body.light-mode .modal-content { background: #f0f4f8; border-color: rgba(0, 119, 255, 0.3); }
+        body.light-mode #modalTitle { color: #0077ff !important; }
+        body.light-mode .modal-content label { color: #0077ff !important; }
+        body.light-mode .modal-content .submit-btn[style*="color:white"] { background: rgba(0, 119, 255, 0.1) !important; color: #0077ff !important; border: 1px solid rgba(0, 119, 255, 0.2); box-shadow: none; }
+        body.light-mode .modal-content .submit-btn[style*="color:white"]:hover { background: rgba(0, 119, 255, 0.2) !important; }
+        body.light-mode .icon-preview { background: #fff; border-color: rgba(0,0,0,0.1); }
+        body.light-mode .icon-preview:hover { border-color: #0077ff; }
+        body.light-mode .col-role span { color: #64748b !important; }
+        body.light-mode .col-role span[style*="00f2fe"] { color: #0077ff !important; font-weight: bold; }
+        body.light-mode .image-viewer { background: rgba(255,255,255,0.85); }
+        body.light-mode .image-viewer img { box-shadow: 0 0 40px rgba(0, 119, 255, 0.2); border-color: rgba(0, 153, 255, 0.2); }
+        
+        /* ==========================================
+           📱 移动端自适应 (重点修改了顶部边距)
            ========================================== */
         @media (max-width: 900px) {
-            .page-wrapper { padding: 2vh 10px; display: block; }
+            /* 修改此处的 padding-top 增加到了 70px，完美避开右上角的悬浮按钮 */
+            .page-wrapper { padding: 70px 10px 20px; display: block; } 
+            
             .login-panel { width: 90%; padding: 30px 20px; margin: 0; }
             .dashboard-panel { padding: 15px 10px; border-radius: 16px; margin-top: 0; }
             
@@ -148,8 +202,35 @@ export default {
             .copy-box { flex-direction: column; align-items: stretch; gap: 8px; }
             .copy-box input { width: 100%; }
             .copy-btn { width: 100%; padding: 10px; }
+            
+            .theme-toggle { top: 15px; right: 15px; width: 36px; height: 36px; }
         }
       </style>
+    `;
+
+    const themeToggleHTML = `
+      <button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="切换亮/暗模式">
+          <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+      </button>
+    `;
+
+    const themeToggleJS = `
+      <script>
+          const themeIcon = document.getElementById('themeIcon');
+          const sunSvg = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+          const moonSvg = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+          function initTheme() {
+              if (localStorage.getItem('theme') === 'light') { document.body.classList.add('light-mode'); themeIcon.innerHTML = moonSvg; } 
+              else { themeIcon.innerHTML = sunSvg; }
+          }
+          function toggleTheme() {
+              document.body.classList.toggle('light-mode');
+              const isLight = document.body.classList.contains('light-mode');
+              localStorage.setItem('theme', isLight ? 'light' : 'dark');
+              themeIcon.innerHTML = isLight ? moonSvg : sunSvg;
+          }
+          initTheme();
+      </script>
     `;
 
     // ==========================================
@@ -157,6 +238,7 @@ export default {
     // ==========================================
     if (request.method === 'GET' && path === '/') {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>专用图标上传</title>${sharedCSS}</head><body>
+          ${themeToggleHTML}
           <div class="page-wrapper">
               <div class="panel login-panel">
                   <h1>Icon Upload</h1>
@@ -220,6 +302,7 @@ export default {
               });
               function copyText(id) { document.getElementById(id).select(); document.execCommand('copy'); alert('复制成功！'); }
           </script>
+          ${themeToggleJS}
       </body></html>`;
       return new Response(html, { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
     }
@@ -229,6 +312,7 @@ export default {
     // ==========================================
     if (request.method === 'GET' && path === '/gallery') {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>游客图库</title>${sharedCSS}</head><body>
+          ${themeToggleHTML}
           <div class="page-wrapper">
               <div class="panel login-panel" id="loginBox">
                   <h1>Guest Gallery</h1>
@@ -299,6 +383,7 @@ export default {
               function copyLink(text) { if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(() => alert('已复制直链！')).catch(() => fallbackCopy(text)); else fallbackCopy(text); }
               function fallbackCopy(text) { const input = document.createElement('input'); input.value = text; document.body.appendChild(input); input.select(); try{ document.execCommand('copy'); alert('已复制直链！'); }catch(e){} document.body.removeChild(input); }
           </script>
+          ${themeToggleJS}
       </body></html>`;
       return new Response(html, { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
     }
@@ -308,6 +393,7 @@ export default {
     // ==========================================
     if (request.method === 'GET' && path === '/admin') {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>管理员控制台</title>${sharedCSS}</head><body>
+          ${themeToggleHTML}
           <div class="page-wrapper">
               <div class="panel login-panel" id="loginBox">
                   <h1>Admin Login</h1>
@@ -551,6 +637,7 @@ export default {
                   finally { btn.textContent = '上传至管理区'; btn.disabled = false; adminDisplay.style.borderColor = 'rgba(255,255,255,0.2)'; }
               });
           </script>
+          ${themeToggleJS}
       </body></html>`;
       return new Response(html, { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
     }
@@ -677,7 +764,7 @@ export default {
     }
 
     // ==========================================
-    // 🤖 TG Bot 引擎 (解决缺失统计Bug & 杜绝按键狂闪)
+    // 🤖 TG Bot 引擎
     // ==========================================
     if (request.method === 'POST' && path === `/webhook/tg/${env.TG_BOT_TOKEN}`) {
       const update = await request.json();
@@ -724,22 +811,17 @@ ${hostUrl}/admin
             let cursor = undefined;
             
             while (!listComplete) {
-                // 1. 修复：安全的 cursor 传递方式，防止超 1000 个时断链
                 const list = await env.ICON_KV.list(cursor ? { cursor } : {});
-                
-                // 2. 修复：通过 Promise.all 并发获取并验证真实有效性，与 Web 控制台对齐
                 await Promise.all(list.keys.map(async keyObj => {
                     const rawValue = await env.ICON_KV.get(keyObj.name);
                     const { url } = parseKvValue(rawValue);
                     
-                    // 只有包含真实 url 的记录才参与统计，过滤掉被删除的残影和脏数据
                     if (url) {
                         const parts = keyObj.name.split(':'); 
                         const role = parts[0];
                         
                         if (role === 'admin') { 
                             adminCount++; 
-                            // 修复：考虑到图标名本身自带多个冒号的极端情况
                             const cat = (parts.length >= 3 && keyObj.name.indexOf(':', 6) !== -1 && !keyObj.name.startsWith('admin::')) 
                                         ? parts[1] : '管理区'; 
                             catCounts[cat] = (catCounts[cat] || 0) + 1; 
@@ -749,9 +831,7 @@ ${hostUrl}/admin
                         }
                     }
                 }));
-                
-                listComplete = list.list_complete; 
-                cursor = list.cursor;
+                listComplete = list.list_complete; cursor = list.cursor;
             }
             
             let catText = ""; 
@@ -763,15 +843,8 @@ ${hostUrl}/admin
             const statsText = `📊 <b>后台数据库实时统计</b>\n\n🛡️ <b>Admin 核心图标库</b> (共 <code>${adminCount}</code> 个)\n${catText}\n🌍 <b>Guest 游客上传库</b> (共 <code>${guestCount}</code> 个)\n\n📦 <b>全库总计收录：</b> <code>${adminCount + guestCount}</code> 个\n\n<i>数据已同步至最新。</i>`;
             
             await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/editMessageText`, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ 
-                    chat_id: chatRoomId, 
-                    message_id: cb.message.message_id, 
-                    text: statsText, 
-                    parse_mode: 'HTML', 
-                    reply_markup: { inline_keyboard: [[{ text: "🔙 返回主菜单", callback_data: "menu" }]] }
-                }) 
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ chat_id: chatRoomId, message_id: cb.message.message_id, text: statsText, parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "🔙 返回主菜单", callback_data: "menu" }]] }}) 
             });
             return new Response('OK');
         }
@@ -821,7 +894,7 @@ ${hostUrl}/admin
                 listComplete = list.list_complete; cursor = list.cursor;
             }
             
-            let kb = []; let temp =[]; const displayIcons = icons.slice(0, 90);
+            let kb =[]; let temp =[]; const displayIcons = icons.slice(0, 90);
             for (let icon of displayIcons) {
                 let cbData = `del_kv:${icon.key}`; if (new Blob([cbData]).size > 64) continue; 
                 temp.push({ text: `❌ 删 ${icon.name}`, callback_data: cbData });
