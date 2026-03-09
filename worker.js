@@ -29,7 +29,7 @@ export default {
     }
 
     // ==========================================
-    // 🎨 共享前端 CSS (终极对称居中排版)
+    // 🎨 共享前端 CSS
     // ==========================================
     const sharedCSS = `
       <style>
@@ -49,7 +49,6 @@ export default {
         .page-wrapper { padding: 5vh 20px; width: 100%; max-width: 1400px; margin: 0 auto; position: relative; }
         .panel { background: rgba(15, 18, 25, 0.7); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(0, 242, 254, 0.15); border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0,242,254,0.05); }
         
-        /* 登录框绝对居中 */
         .login-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; padding: 40px 30px; text-align: center; z-index: 50; margin: 0; }
         .dashboard-panel { width: 100%; padding: 30px; margin: 0 auto; }
 
@@ -65,7 +64,6 @@ export default {
         .file-upload-label { display: block; width: 100%; padding: 15px 20px; background: rgba(255,255,255,0.03); border: 1.5px dashed rgba(255,255,255,0.2); border-radius: 30px; color: rgba(255,255,255,0.5); font-size: 14px; cursor: pointer; text-align: left; transition: all 0.3s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 20px; box-sizing: border-box;}
         .file-upload-label:hover { background: rgba(0,242,254,0.05); border-color: #00f2fe; color: white; }
         
-        /* 大按钮文字完美居中 */
         .submit-btn { display: flex; justify-content: center; align-items: center; width: 100%; padding: 15px; background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #050608; border: none; border-radius: 30px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s; text-align: center; }
         .submit-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,242,254,0.4); }
         .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -73,7 +71,6 @@ export default {
         .submit-btn.gallery-btn { background: linear-gradient(135deg, #0052d4 0%, #4364f7 100%); box-shadow: 0 5px 15px rgba(67, 100, 247, 0.3); color: #fff;}
         .submit-btn.gallery-btn:hover:not(:disabled) { background: linear-gradient(135deg, #4364f7 0%, #6fb1fc 100%); box-shadow: 0 8px 25px rgba(67, 100, 247, 0.6); }
         
-        /* 复制/删除 小按钮文字绝对居中 */
         .submit-btn.danger { display: inline-flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); box-shadow: none; padding: 6px 12px; font-size: 12px; color: white; border-radius: 20px; width: auto; text-align: center; }
         .submit-btn.danger:hover:not(:disabled) { box-shadow: 0 5px 15px rgba(255,65,108,0.4); }
         .submit-btn.outline { display: inline-flex; justify-content: center; align-items: center; background: transparent; border: 1px solid #00f2fe; color: #00f2fe; padding: 6px 15px; border-radius: 20px; font-size: 12px; font-weight: normal; width: auto; margin: 0; text-align: center; }
@@ -97,7 +94,6 @@ export default {
         th, td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
         th { color: #00f2fe; font-weight: normal; white-space: nowrap; }
         
-        /* 电脑端默认靠左 */
         .name-box { display: flex; flex-direction: column; line-height: 1.5; align-items: flex-start; text-align: left; }
         
         .action-btns { display: flex; gap: 6px; flex-wrap: nowrap; align-items: center; }
@@ -117,7 +113,7 @@ export default {
         @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         /* ==========================================
-           📱 移动端自适应 (终极对称居中强迫症治愈版)
+           📱 移动端自适应
            ========================================== */
         @media (max-width: 900px) {
             .page-wrapper { padding: 2vh 10px; display: block; }
@@ -135,11 +131,9 @@ export default {
             th.col-cb, td.col-cb { width: 24px; text-align: center; padding: 0; } 
             th.col-preview, td.col-preview { width: 38px; text-align: center; } 
             
-            /* 🎯 治愈强迫症：将“合集”和“归属”完全左右对称锁死，释放中间全部空间！ */
             th.col-cat, td.col-cat { width: 48px; text-align: center; padding: 0 2px; } 
             th.col-role, td.col-role { width: 48px; text-align: center; padding: 0 2px; } 
             
-            /* 🎯 治愈强迫症：名称由于两边对称，此时绝对居中！ */
             th.col-name, td.col-name { width: auto; text-align: center; } 
             .name-box { align-items: center; justify-content: center; text-align: center; width: 100%; margin: 0 auto; }
             
@@ -683,7 +677,7 @@ export default {
     }
 
     // ==========================================
-    // 🤖 TG Bot 引擎
+    // 🤖 TG Bot 引擎 (解决缺失统计Bug & 杜绝按键狂闪)
     // ==========================================
     if (request.method === 'POST' && path === `/webhook/tg/${env.TG_BOT_TOKEN}`) {
       const update = await request.json();
@@ -724,21 +718,61 @@ ${hostUrl}/admin
         if (allowedAdminIds.length > 0 && !allowedAdminIds.includes(chatRoomId) && !allowedAdminIds.includes(userId)) return new Response('OK');
 
         if (data === 'stats') {
-            let adminCount = 0, guestCount = 0; let catCounts = {}; let listComplete = false; let cursor = undefined;
+            let adminCount = 0, guestCount = 0; 
+            let catCounts = {}; 
+            let listComplete = false; 
+            let cursor = undefined;
+            
             while (!listComplete) {
-                const list = await env.ICON_KV.list({ cursor: cursor });
-                for (const keyObj of list.keys) {
-                    const parts = keyObj.name.split(':'); const role = parts[0];
-                    if (role === 'admin') { adminCount++; if (parts.length >= 3) { const cat = parts[1]; catCounts[cat] = (catCounts[cat] || 0) + 1; } } 
-                    else if (role === 'guest') { guestCount++; }
-                }
-                listComplete = list.list_complete; cursor = list.cursor;
+                // 1. 修复：安全的 cursor 传递方式，防止超 1000 个时断链
+                const list = await env.ICON_KV.list(cursor ? { cursor } : {});
+                
+                // 2. 修复：通过 Promise.all 并发获取并验证真实有效性，与 Web 控制台对齐
+                await Promise.all(list.keys.map(async keyObj => {
+                    const rawValue = await env.ICON_KV.get(keyObj.name);
+                    const { url } = parseKvValue(rawValue);
+                    
+                    // 只有包含真实 url 的记录才参与统计，过滤掉被删除的残影和脏数据
+                    if (url) {
+                        const parts = keyObj.name.split(':'); 
+                        const role = parts[0];
+                        
+                        if (role === 'admin') { 
+                            adminCount++; 
+                            // 修复：考虑到图标名本身自带多个冒号的极端情况
+                            const cat = (parts.length >= 3 && keyObj.name.indexOf(':', 6) !== -1 && !keyObj.name.startsWith('admin::')) 
+                                        ? parts[1] : '管理区'; 
+                            catCounts[cat] = (catCounts[cat] || 0) + 1; 
+                        } 
+                        else if (role === 'guest') { 
+                            guestCount++; 
+                        }
+                    }
+                }));
+                
+                listComplete = list.list_complete; 
+                cursor = list.cursor;
             }
-            let catText = ""; const sortedCats = Object.keys(catCounts).sort();
-            for (const cat of sortedCats) { catText += `├ <code>${cat}</code> : ${catCounts[cat]} 个\n`; }
+            
+            let catText = ""; 
+            const sortedCats = Object.keys(catCounts).sort();
+            for (const cat of sortedCats) { 
+                catText += `├ <code>${cat}</code> : ${catCounts[cat]} 个\n`; 
+            }
+            
             const statsText = `📊 <b>后台数据库实时统计</b>\n\n🛡️ <b>Admin 核心图标库</b> (共 <code>${adminCount}</code> 个)\n${catText}\n🌍 <b>Guest 游客上传库</b> (共 <code>${guestCount}</code> 个)\n\n📦 <b>全库总计收录：</b> <code>${adminCount + guestCount}</code> 个\n\n<i>数据已同步至最新。</i>`;
             
-            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/editMessageText`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatRoomId, message_id: cb.message.message_id, text: statsText, parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "🔙 返回主菜单", callback_data: "menu" }]] }}) });
+            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/editMessageText`, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ 
+                    chat_id: chatRoomId, 
+                    message_id: cb.message.message_id, 
+                    text: statsText, 
+                    parse_mode: 'HTML', 
+                    reply_markup: { inline_keyboard: [[{ text: "🔙 返回主菜单", callback_data: "menu" }]] }
+                }) 
+            });
             return new Response('OK');
         }
 
@@ -887,7 +921,7 @@ ${hostUrl}/admin
             
             if (tgRes.ok) { const tgData = await tgRes.json(); replyMsgId = tgData.result.message_id; }
             await env.ICON_KV.put(kvKey, JSON.stringify({ url: publicUrl, msgId: replyMsgId, chatId: chatRoomId, size: sizeStr }));
-          } catch (err) { await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatRoomId, text: `❌ [${tgIconName}] 上传失败` }) }); }
+          } catch (err) { await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatRoomId, text: `❌[${tgIconName}] 上传失败` }) }); }
         }
       }
       return new Response('OK');
