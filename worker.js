@@ -165,10 +165,9 @@ export default {
         body.light-mode .image-viewer img { box-shadow: 0 0 40px rgba(0, 119, 255, 0.2); border-color: rgba(0, 153, 255, 0.2); }
         
         /* ==========================================
-           📱 移动端自适应 (重点修改了顶部边距)
+           📱 移动端自适应
            ========================================== */
         @media (max-width: 900px) {
-            /* 修改此处的 padding-top 增加到了 70px，完美避开右上角的悬浮按钮 */
             .page-wrapper { padding: 70px 10px 20px; display: block; } 
             
             .login-panel { width: 90%; padding: 30px 20px; margin: 0; }
@@ -773,15 +772,17 @@ export default {
       const menuText = `👋 <b>欢迎使用专属图标管理机器人！</b>
 
 ===========================
-📤 <b>【如何上传图标？】</b>
-🤖 <i>Telegram 机器人没有“相册上传”按钮！</i>
-👉 <b>请直接点击聊天框左下角的 📎 (附件) 图标</b>
-👉 然后选择图片发给我，系统就会<b>全自动收录入库！</b>
-*(若保留原文件名批量传，请选择“作为文件/Document”发送)*
+📥 <b>【如何批量/单张上传？】</b>
+1️⃣ <b>先设置存放的目录 (直接发送对应消息)：</b>
+• 发送 <code>/admin</code> : 切换到【管理区】(默认)
+• 发送 <code>/你的合集名</code> : 切换到指定合集 (如 <code>/test</code> 或 <code>/影视</code>，会自动创建)
+• 发送 <code>/guest</code> : 切换到【游客区】
 
-🏷️ <b>【如何把图片放到指定的合集？】</b>
-发送图片时，在“添加说明(Caption)”处填写：
-<code>合集名:图标名</code> (例如: <code>影视:emby</code>)
+2️⃣ <b>设置好后，直接发送图片即可全自动入库！</b>
+👉 <b>单张发图：</b>默认生成随机名 (也可在"添加说明/Caption"填自定义名)
+👉 <b>批量入库 (🔥 强烈推荐)：</b>发送时选择<b>“作为文件 / Document”</b>，会自动剥离扩展名并使用原文件名入库！
+
+<i>💡 隐藏技巧：发送图片时，如果在说明(Caption)直接填 <code>/合集名</code>，可实现单张临时穿越覆盖，不影响全局状态！</i>
 ===========================
 
 🌐 <b>网页管理控制台：</b>
@@ -958,43 +959,100 @@ ${hostUrl}/admin
         if (allowedAdminIds.length > 0 && !allowedAdminIds.includes(chatRoomId) && !allowedAdminIds.includes(userId)) return new Response('OK');
         const msgText = update.message.text || '';
 
+        // 【TG 指令】：打开主菜单
         if (msgText === '/start' || msgText === '/help') {
            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatRoomId, text: menuText, parse_mode: 'HTML', disable_web_page_preview: true, reply_markup: menuMarkup }) });
            return new Response('OK');
         }
 
+        // 【TG 指令】：设置全局上传目标 (拦截任何不是 start 和 help 的指令)
+        if (msgText.startsWith('/')) {
+            const targetRaw = msgText.substring(1).trim().split('@')[0]; // 防止群组自动补全 bot_name
+            if (targetRaw === 'guest') {
+                await env.ICON_KV.put(`tg_state:${chatRoomId}`, JSON.stringify({ role: 'guest', category: '' }));
+                await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatRoomId, text: "✅ <b>已成功切换存放位置</b>\n\n当前目标：🌍 <b>游客区</b>\n\n您接下来发送的所有图片将自动存入此区。\n<i>(如需切回管理区，请发送 /admin)</i>", parse_mode: 'HTML' }) });
+            } else if (targetRaw === 'admin') {
+                await env.ICON_KV.put(`tg_state:${chatRoomId}`, JSON.stringify({ role: 'admin', category: '' }));
+                await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatRoomId, text: "✅ <b>已成功切换存放位置</b>\n\n当前目标：🛡️ <b>管理区</b> (默认散装)\n\n您接下来发送的所有图片将自动存入此区。\n<i>(如需新建特定合集，请直接发送 如: /test)</i>", parse_mode: 'HTML' }) });
+            } else if (targetRaw !== '') {
+                const cleanTarget = targetRaw.replace(/[:/]/g, '');
+                await env.ICON_KV.put(`tg_state:${chatRoomId}`, JSON.stringify({ role: 'admin', category: cleanTarget }));
+                await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatRoomId, text: `✅ <b>已成功切换存放位置</b>\n\n当前目标：📁 <b>${cleanTarget}</b> (管理区特定合集)\n\n您接下来发送的所有图片将自动归类到此合集。\n<i>(如需切回散装管理区，请发送 /admin)</i>`, parse_mode: 'HTML' }) });
+            }
+            return new Response('OK');
+        }
+
+        // 【TG 上传处理】：接收图片或文件
         if (update.message.photo || update.message.document) {
-          let fileId, tgIconName, tgCategory = ''; let caption = update.message.caption || ''; let isDocument = !!update.message.document;
+          
+          // 1. 读取该聊天对象的全局目标状态
+          let stateStr = await env.ICON_KV.get(`tg_state:${chatRoomId}`);
+          let state = stateStr ? JSON.parse(stateStr) : { role: 'admin', category: '' };
+          
+          let role = state.role || 'admin';
+          let tgCategory = state.category || '';
 
-          if (isDocument) {
-              const doc = update.message.document; if (!doc.mime_type || !doc.mime_type.startsWith('image/')) return new Response('OK');
-              fileId = doc.file_id; let rawName = doc.file_name || `tg_icon_${Date.now()}.png`; tgIconName = rawName.replace(/\.[^/.]+$/, ""); 
-          } else { const photo = update.message.photo.pop(); fileId = photo.file_id; tgIconName = caption || `tg_icon_${Date.now()}`; }
+          let fileId, tgIconName; 
+          let caption = update.message.caption || ''; 
+          let isDocument = !!update.message.document;
 
-          if (caption.includes(':') || caption.includes('：')) {
-              const parts = caption.split(/[:：]/); tgCategory = parts[0].trim().replace(/[:/]/g, '');
-              if (!isDocument || parts.slice(1).join(':').trim() !== '') { tgIconName = parts.slice(1).join(':').trim() || tgIconName; }
+          // 2. 隐藏技巧：如果图片说明(Caption)直接就是一个斜杠命令，则实现【单次越级覆盖】
+          if (caption.startsWith('/')) {
+              const tempTarget = caption.substring(1).trim().split('@')[0];
+              if (tempTarget === 'guest') { role = 'guest'; tgCategory = ''; }
+              else if (tempTarget === 'admin') { role = 'admin'; tgCategory = ''; }
+              else { role = 'admin'; tgCategory = tempTarget.replace(/[:/]/g, ''); }
+              caption = ''; // 使用后清空 caption，避免它变成图标的名字
           }
 
-          const role = 'admin'; const kvKey = tgCategory ? `${role}:${tgCategory}:${tgIconName}` : `${role}:${tgIconName}`;
+          // 3. 获取文件名或名字
+          if (isDocument) {
+              const doc = update.message.document; 
+              if (!doc.mime_type || !doc.mime_type.startsWith('image/')) return new Response('OK');
+              fileId = doc.file_id; 
+              let rawName = doc.file_name || `tg_icon_${Date.now()}.png`; 
+              // 自动将上传的原始文件名剔除扩展名
+              tgIconName = rawName.replace(/\.[^/.]+$/, ""); 
+              // 如果发文件时依然填了说明，则强制用说明作名字
+              if (caption) tgIconName = caption;
+          } else { 
+              const photo = update.message.photo.pop(); 
+              fileId = photo.file_id; 
+              tgIconName = caption || `tg_icon_${Date.now()}`; 
+          }
+
+          // 去除特殊字符并生成最终存库的主键
+          tgIconName = tgIconName.trim().replace(/[:/]/g, '_');
+          const kvKey = tgCategory ? `${role}:${tgCategory}:${tgIconName}` : `${role}:${tgIconName}`;
 
           try {
             const fileInfoRes = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/getFile?file_id=${fileId}`); const fileInfo = await fileInfoRes.json();
             const imageRes = await fetch(`https://api.telegram.org/file/bot${env.TG_BOT_TOKEN}/${fileInfo.result.file_path}`); const imageBuffer = await imageRes.arrayBuffer();
             const sizeStr = formatSize(imageBuffer.byteLength);
+            
             const fileExt = isDocument && update.message.document.file_name ? update.message.document.file_name.split('.').pop() : 'png';
             const r2Path = `tg/${tgIconName}_${Date.now()}.${fileExt}`;
-            await env.ICON_R2.put(r2Path, imageBuffer); const publicUrl = `${hostUrl}/${r2Path}`;
+            
+            // 存入 R2
+            await env.ICON_R2.put(r2Path, imageBuffer); 
+            const publicUrl = `${hostUrl}/${r2Path}`;
 
-            let replyMsgId = null; const catText = tgCategory ? `[${tgCategory}]` : '';
+            let replyMsgId = null; 
+            let catText = role === 'guest' ? ' [🌍游客区]' : (tgCategory ? ` [📁${tgCategory}]` : ' [🛡️管理区]');
+            
+            // 通知 TG 入库成功
             const tgRes = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ chat_id: chatRoomId, text: `✅ <b>入库成功${catText}</b> | <code>${tgIconName}</code>\n📦 大小: <code>${sizeStr}</code>`, parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "🗑️ 彻底删除", callback_data: `del_kv:${kvKey}` }]] } })
             });
             
             if (tgRes.ok) { const tgData = await tgRes.json(); replyMsgId = tgData.result.message_id; }
+            
+            // 存入 KV 数据库
             await env.ICON_KV.put(kvKey, JSON.stringify({ url: publicUrl, msgId: replyMsgId, chatId: chatRoomId, size: sizeStr }));
-          } catch (err) { await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatRoomId, text: `❌[${tgIconName}] 上传失败` }) }); }
+          } catch (err) { 
+            await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatRoomId, text: `❌ 存入失败: [${tgIconName}]` }) }); 
+          }
         }
       }
       return new Response('OK');
