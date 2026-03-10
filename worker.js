@@ -13,6 +13,43 @@ export default {
     }
 
     // ==========================================
+    // 🔗 一键自动激活 Webhook (告别手动拼链接)
+    // ==========================================
+    if (request.method === 'GET' && path === '/api/init') {
+        let resultText = "🤖 【Telegram Webhook 激活结果】\n\n";
+        
+        // 1. 激活管理员机器人
+        if (env.TG_BOT_TOKEN) {
+            const adminWebhook = `${hostUrl}/webhook/tg/${env.TG_BOT_TOKEN}`;
+            try {
+                const res = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/setWebhook?url=${encodeURIComponent(adminWebhook)}`);
+                const data = await res.json();
+                resultText += `🛡️ 管理员机器人:\n🔗 绑定地址: ${adminWebhook}\n✅ 状态: ${data.description}\n\n`;
+            } catch (e) {
+                resultText += `🛡️ 管理员机器人:\n❌ 请求失败: ${e.message}\n\n`;
+            }
+        } else {
+            resultText += `🛡️ 管理员机器人: ⚠️ 未在环境变量配置 TG_BOT_TOKEN\n\n`;
+        }
+        
+        // 2. 激活游客机器人
+        if (env.GUEST_TG_BOT_TOKEN) {
+            const guestWebhook = `${hostUrl}/webhook/tg_guest/${env.GUEST_TG_BOT_TOKEN}`;
+            try {
+                const res = await fetch(`https://api.telegram.org/bot${env.GUEST_TG_BOT_TOKEN}/setWebhook?url=${encodeURIComponent(guestWebhook)}`);
+                const data = await res.json();
+                resultText += `🌍 游客区机器人:\n🔗 绑定地址: ${guestWebhook}\n✅ 状态: ${data.description}\n\n`;
+            } catch (e) {
+                resultText += `🌍 游客区机器人:\n❌ 请求失败: ${e.message}\n\n`;
+            }
+        } else {
+            resultText += `🌍 游客区机器人: ⚠️ 未在环境变量配置 GUEST_TG_BOT_TOKEN\n\n`;
+        }
+
+        return new Response(resultText, { headers: { 'Content-Type': 'text/plain;charset=UTF-8' } });
+    }
+
+    // ==========================================
     // 🛠️ 辅助函数：文件大小精准计算 & KV 解析
     // ==========================================
     function formatSize(bytes) {
@@ -737,11 +774,12 @@ export default {
       
       let tgMsgId = null; let tgChatId = null; const primaryTargetId = env.ADMIN_CHAT_ID ? String(env.ADMIN_CHAT_ID).split(',')[0].trim() : null;
       try {
-        if (primaryTargetId) {
+        //[网页端上传] -> 都会推送到群里
+        if (primaryTargetId && env.TG_BOT_TOKEN) {
             const tgRes = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ 
-                  chat_id: primaryTargetId, text: `🔔 <b>网页端上传[${role === 'admin' ? '管理后台' : '游客区'}]</b>\n名称: <code>${iconName}</code>${role === 'admin' && category ? `\n合集: <code>${category}</code>` : ''}\n📦 大小: <code>${sizeStr}</code>\n链接: ${publicUrl}`, parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "🗑️ 彻底删除", callback_data: `del_kv:${kvKey}` }]] }
+                  chat_id: primaryTargetId, text: `🔔 <b>网页端上传 [${role === 'admin' ? '🛡️管理后台' : '🌍游客区'}]</b>\n名称: <code>${iconName}</code>${role === 'admin' && category ? `\n合集: <code>${category}</code>` : ''}\n📦 大小: <code>${sizeStr}</code>\n链接: ${publicUrl}`, parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "🗑️ 彻底删除", callback_data: `del_kv:${kvKey}` }]] }
               })
             });
             if (tgRes.ok) { const tgData = await tgRes.json(); tgMsgId = tgData.result.message_id; tgChatId = tgData.result.chat.id; }
@@ -900,7 +938,7 @@ ${hostUrl}/admin
           const msgText = cb.message.text || '';
           
           ctx.waitUntil((async () => {
-              if (msgText.includes('网页端上传') || msgText.includes('入库成功')) {
+              if (msgText.includes('网页端上传') || msgText.includes('入库成功') || msgText.includes('机器人上传')) {
                   await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/editMessageText`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: cb.message.chat.id, message_id: cb.message.message_id, text: `🗑️ 图标[${kvKey.split(':').pop()}] 已从数据库中彻底抹除。` }) });
               } else {
                   if (newKb.length === 1 && newKb[0][0].callback_data === 'list_cats') {
@@ -983,7 +1021,8 @@ ${hostUrl}/admin
             const r2Path = `tg/${tgIconName}_${Date.now()}.${fileExt}`;
             await env.ICON_R2.put(r2Path, imageBuffer); const publicUrl = `${hostUrl}/${r2Path}`;
 
-            let replyMsgId = null; let catText = role === 'guest' ? ' [🌍游客区]' : (tgCategory ? ` [📁${tgCategory}]` : '[🛡️管理区]');
+            // [管理机器人上传] -> 仅回复到当前会话，不做群推送！
+            let replyMsgId = null; let catText = role === 'guest' ? '[🌍游客区]' : (tgCategory ? ` [📁${tgCategory}]` : ' [🛡️管理区]');
             const tgRes = await fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ chat_id: chatRoomId, text: `✅ <b>入库成功${catText}</b> | <code>${tgIconName}</code>\n📦 大小: <code>${sizeStr}</code>`, parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "🗑️ 彻底删除", callback_data: `del_kv:${kvKey}` }]] } })
@@ -1009,7 +1048,7 @@ ${hostUrl}/admin
 📤 <b>【如何上传图标？】</b>
 👉 <b>直接点击聊天框左下的 📎 (附件) 图标</b>
 👉 选择单张图片发给我，系统会自动收录到游客区！
-<i>*(可保留原名，也可在图片说明Caption填自定义名)*</i>
+<i>*(如果选发送文件则默认原文件名，选发送图片则默认随机名，也可在说明里自定义)*</i>
 
 🌐 <b>游客图库与网页端：</b>
 ${hostUrl}/gallery
@@ -1070,13 +1109,28 @@ ${hostUrl}/guest.json
             const r2Path = `${role}/${tgIconName}_${Date.now()}.${fileExt}`;
             await env.ICON_R2.put(r2Path, imageBuffer); const publicUrl = `${hostUrl}/${r2Path}`;
 
+            // 1. 回复给上传图片的游客
             let replyMsgId = null; 
             const tgRes = await fetch(`https://api.telegram.org/bot${env.GUEST_TG_BOT_TOKEN}/sendMessage`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ chat_id: chatRoomId, text: `✅ <b>入库成功 [🌍游客专属区]</b> | <code>${tgIconName}</code>\n📦 大小: <code>${sizeStr}</code>`, parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "🗑️ 撤回删除", callback_data: `del_kv:${kvKey}` }]] } })
             });
-            
             if (tgRes.ok) { const tgData = await tgRes.json(); replyMsgId = tgData.result.message_id; }
+            
+            // 2. [新增推送] -> 利用主管理机器人的 Token，推送到管理员中心群
+            const primaryTargetId = env.ADMIN_CHAT_ID ? String(env.ADMIN_CHAT_ID).split(',')[0].trim() : null;
+            if (primaryTargetId && env.TG_BOT_TOKEN && String(chatRoomId) !== primaryTargetId) {
+                fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ 
+                      chat_id: primaryTargetId, 
+                      text: `🔔 <b>游客机器人上传 [🌍游客区]</b>\n名称: <code>${tgIconName}</code>\n📦 大小: <code>${sizeStr}</code>\n链接: ${publicUrl}`, 
+                      parse_mode: 'HTML', 
+                      reply_markup: { inline_keyboard: [[{ text: "🗑️ 彻底删除", callback_data: `del_kv:${kvKey}` }]] }
+                  })
+                }).catch(() => {});
+            }
+
             await env.ICON_KV.put(kvKey, JSON.stringify({ url: publicUrl, msgId: replyMsgId, chatId: chatRoomId, size: sizeStr }));
           } catch (err) { await fetch(`https://api.telegram.org/bot${env.GUEST_TG_BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatRoomId, text: `❌ 存入失败:[${tgIconName}]` }) }); }
         }
