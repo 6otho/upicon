@@ -525,7 +525,7 @@ export default {
                   btn.innerText = '登录中...'; btn.disabled = true;
 
                   try {
-                      const res = await fetch('/api/admin/list', { headers: { 'Authorization': inputPwd } });
+                      const res = await fetch('/api/admin/list', { headers: { 'Authorization': pwd } });
                       if(res.ok) { 
                           sessionStorage.setItem('adminPwd', inputPwd); pwd = inputPwd; 
                           document.getElementById('loginBox').style.display = 'none'; 
@@ -1045,7 +1045,12 @@ ${hostUrl}/admin
       const guestMenuText = `👋 <b>欢迎使用游客专属图标上传机器人！</b>
 
 ===========================
+🔒 <b>【身份验证】</b>
+为了防止滥用，上传前请先进行验证。
+请直接发送指令：<code>/login 你的访问密码</code>
+
 📤 <b>【如何上传图标？】</b>
+(验证通过后)
 👉 <b>直接点击聊天框左下的 📎 (附件) 图标</b>
 👉 选择单张图片发给我，系统会自动收录到游客区！
 <i>*(如果选发送文件则默认原文件名，选发送图片则默认随机名，也可在说明里自定义)*</i>
@@ -1081,12 +1086,56 @@ ${hostUrl}/guest.json
         const chatRoomId = String(update.message.chat.id);
         const msgText = update.message.text || '';
 
+        // --- 新增：游客登录处理逻辑 ---
+        if (msgText.startsWith('/login')) {
+            const inputPwd = msgText.replace('/login', '').trim();
+            if (inputPwd === env.GUEST_PASSWORD) {
+                // 验证成功，在 KV 记录该用户的授权状态，有效期 30 天
+                await env.ICON_KV.put(`guest_auth:${chatRoomId}`, "true", { expirationTtl: 2592000 });
+                await fetch(`https://api.telegram.org/bot${env.GUEST_TG_BOT_TOKEN}/sendMessage`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ 
+                        chat_id: chatRoomId, 
+                        text: "✅ <b>授权成功！</b>\n您现在可以直接向我发送图片或文件进行入库了。", 
+                        parse_mode: 'HTML' 
+                    }) 
+                });
+            } else {
+                await fetch(`https://api.telegram.org/bot${env.GUEST_TG_BOT_TOKEN}/sendMessage`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ 
+                        chat_id: chatRoomId, 
+                        text: "❌ <b>验证失败</b>\n密码错误，请检查后再试。格式：<code>/login 密码</code>", 
+                        parse_mode: 'HTML' 
+                    }) 
+                });
+            }
+            return new Response('OK');
+        }
+
         if (msgText === '/start' || msgText === '/help') {
            await fetch(`https://api.telegram.org/bot${env.GUEST_TG_BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatRoomId, text: guestMenuText, parse_mode: 'HTML', disable_web_page_preview: true }) });
            return new Response('OK');
         }
 
         if (update.message.photo || update.message.document) {
+          // --- 新增：上传前的身份鉴权检查 ---
+          const isAuth = await env.ICON_KV.get(`guest_auth:${chatRoomId}`);
+          if (!isAuth) {
+              await fetch(`https://api.telegram.org/bot${env.GUEST_TG_BOT_TOKEN}/sendMessage`, { 
+                  method: 'POST', 
+                  headers: { 'Content-Type': 'application/json' }, 
+                  body: JSON.stringify({ 
+                      chat_id: chatRoomId, 
+                      text: "⚠️ <b>尚未授权</b>\n请先发送 <code>/login 你的密码</code> 进行解锁，然后再发送图片。", 
+                      parse_mode: 'HTML' 
+                  }) 
+              });
+              return new Response('OK');
+          }
+
           let fileId, tgIconName; let caption = update.message.caption || ''; let isDocument = !!update.message.document;
 
           if (isDocument) {
