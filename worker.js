@@ -151,8 +151,11 @@ export default {
         @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         /* ==========================================
-           🌞 亮暗模式切换支持
+           🌞 亮暗模式切换支持 & 搜索框适配
            ========================================== */
+        .search-input { padding: 6px 15px; border-radius: 20px; border: 1px solid rgba(0,242,254,0.3); background: rgba(0,0,0,0.2); color: white; outline: none; font-size: 13px; width: 220px; transition: all 0.3s; }
+        .search-input:focus { border-color: #00f2fe; box-shadow: 0 0 10px rgba(0,242,254,0.2); }
+
         .theme-toggle { position: fixed; top: 25px; right: 25px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; width: 42px; height: 42px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: all 0.3s ease; }
         .theme-toggle:hover { background: rgba(0, 242, 254, 0.2); border-color: #00f2fe; transform: scale(1.1); }
         
@@ -200,9 +203,11 @@ export default {
         body.light-mode .col-role span[style*="00f2fe"] { color: #0077ff !important; font-weight: bold; }
         body.light-mode .image-viewer { background: rgba(255,255,255,0.85); }
         body.light-mode .image-viewer img { box-shadow: 0 0 40px rgba(0, 119, 255, 0.2); border-color: rgba(0, 153, 255, 0.2); }
+        body.light-mode .search-input { background: #fff; border-color: rgba(0, 119, 255, 0.3); color: #1e293b; }
+        body.light-mode .search-input::placeholder { color: #94a3b8; }
         
         /* ==========================================
-           📱 移动端自适应 (重点修改了顶部边距)
+           📱 移动端自适应
            ========================================== */
         @media (max-width: 900px) {
             .page-wrapper { padding: 70px 10px 20px; display: block; } 
@@ -240,9 +245,13 @@ export default {
             .copy-btn { width: 100%; padding: 10px; }
             
             .theme-toggle { top: 15px; right: 15px; width: 36px; height: 36px; }
+            .search-input { width: 100%; margin-top: 10px; }
         }
       </style>
     `;
+
+    // 修复 Chrome/Edge 报错的核心：使用极其标准、不含任何特殊字符串的 URL-encoded SVG 作为兜底占位图
+    const fallbackImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='35' height='35'%3E%3Crect width='35' height='35' fill='%232d3748' rx='6'/%3E%3Cpath d='M12 12 L23 23 M23 12 L12 23' stroke='%23f56565' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E";
 
     const themeToggleHTML = `
       <button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="切换亮/暗模式">
@@ -270,7 +279,7 @@ export default {
     `;
 
     // ==========================================
-    // 🌐 路由 1：游客上传页 (完全阉割批量)
+    // 🌐 路由 1：游客上传页
     // ==========================================
     if (request.method === 'GET' && path === '/') {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>专用图标上传</title>${sharedCSS}</head><body>
@@ -354,7 +363,7 @@ export default {
     }
 
     // ==========================================
-    // 🖼️ 路由：游客图库
+    // 🖼️ 路由：游客图库 (修复搜索卡顿 & 图片防裂)
     // ==========================================
     if (request.method === 'GET' && path === '/gallery') {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>游客图库</title>${sharedCSS}</head><body>
@@ -368,8 +377,15 @@ export default {
               </div>
               <div class="panel dashboard-panel" id="galleryBox" style="display:none;">
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
-                      <h1 style="margin: 0; font-size: 22px;">游客专属图库</h1>
-                      <div style="display:flex; gap:10px;"><a href="${hostUrl}/guest.json" target="_blank" class="submit-btn outline" style="text-decoration:none; border-color:#4a90e2; color:#4a90e2; line-height:16px;">📄 查看 JSON</a><button class="submit-btn outline" style="width: auto; margin: 0; border-color: rgba(255,255,255,0.3); color: white;" onclick="logout()">退出图库</button></div>
+                      <div style="display:flex; align-items:center; gap: 15px; flex-wrap: wrap;">
+                          <h1 style="margin: 0; font-size: 22px;">游客专属图库</h1>
+                          <!-- 修复1：使用 oninput 替代 onkeyup，解决手机键盘联想问题 -->
+                          <input type="text" id="gallerySearch" class="search-input" placeholder="🔍 搜索图标名称..." oninput="debounceGallerySearch()">
+                      </div>
+                      <div style="display:flex; gap:10px;">
+                          <a href="${hostUrl}/guest.json" target="_blank" class="submit-btn outline" style="text-decoration:none; border-color:#4a90e2; color:#4a90e2; line-height:16px;">📄 查看 JSON</a>
+                          <button class="submit-btn outline" style="width: auto; margin: 0; border-color: rgba(255,255,255,0.3); color: white;" onclick="logout()">退出图库</button>
+                      </div>
                   </div>
                   <div class="table-container">
                       <table>
@@ -381,7 +397,19 @@ export default {
           </div>
           <div class="image-viewer" id="imageViewer" onclick="closeImageViewer()"><img id="viewerImage" src="" alt="大图预览"></div>
           <script>
-              let pwd = sessionStorage.getItem('guestPwd') || ''; if(pwd) login(pwd);
+              let pwd = sessionStorage.getItem('guestPwd') || ''; 
+              let allGalleryData = [];
+              if(pwd) login(pwd);
+
+              // 修复2：加入防抖机制，等待用户输入停顿 300ms 后再渲染，彻底告别移动端卡顿
+              let searchTimeout = null;
+              function debounceGallerySearch() {
+                  if(searchTimeout) clearTimeout(searchTimeout);
+                  searchTimeout = setTimeout(() => {
+                      renderGalleryList();
+                  }, 300);
+              }
+
               async function login(savedPwd) {
                   const btn = document.querySelector('#loginBox .submit-btn');
                   let inputPwd = document.getElementById('guestPwd').value;
@@ -397,7 +425,8 @@ export default {
                           sessionStorage.setItem('guestPwd', inputPwd); pwd = inputPwd; 
                           document.getElementById('loginBox').style.display = 'none'; 
                           document.getElementById('galleryBox').style.display = 'block'; 
-                          renderList(await res.json()); 
+                          allGalleryData = await res.json();
+                          renderGalleryList(); 
                       } else { 
                           if(typeof savedPwd !== 'string') alert('访问密码错误'); 
                           sessionStorage.removeItem('guestPwd'); 
@@ -407,13 +436,18 @@ export default {
               }
               function logout() { sessionStorage.removeItem('guestPwd'); pwd = ''; document.getElementById('galleryBox').style.display = 'none'; document.getElementById('loginBox').style.display = 'block'; document.getElementById('guestPwd').value = ''; }
               
-              function renderList(data) {
+              function renderGalleryList() {
                   const tbody = document.getElementById('galleryListBody'); tbody.innerHTML = '';
-                  if(data.length === 0) return tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#888;">图库空空如也</td></tr>';
-                  data.forEach(item => { 
+                  
+                  const keyword = document.getElementById('gallerySearch') ? document.getElementById('gallerySearch').value.toLowerCase() : '';
+                  const filtered = keyword ? allGalleryData.filter(item => item.name.toLowerCase().includes(keyword)) : allGalleryData;
+
+                  if(filtered.length === 0) return tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#888;">无匹配记录</td></tr>';
+                  
+                  filtered.forEach(item => { 
                       const tr = document.createElement('tr'); 
                       tr.innerHTML = \`
-                          <td class="col-preview"><img src="\${item.url}" class="icon-preview" onclick="viewImage('\${item.url}')" loading="lazy"></td>
+                          <td class="col-preview"><img src="\${item.url}" class="icon-preview" onclick="viewImage('\${item.url}')" loading="lazy" onerror="this.onerror=null; this.src='${fallbackImage}';"></td>
                           <td class="col-name">
                               <div class="name-box">
                                   <code style="color:#e0e6ed; font-size:13px; word-break: break-all;">\${item.name}</code>
@@ -435,7 +469,7 @@ export default {
     }
 
     // ==========================================
-    // 🛡️ 路由 3：管理员面板
+    // 🛡️ 路由 3：管理员面板 (修复搜索卡顿 & 图片防裂)
     // ==========================================
     if (request.method === 'GET' && path === '/admin') {
       const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>管理员控制台</title>${sharedCSS}</head><body>
@@ -474,8 +508,12 @@ export default {
                       </div>
                       
                       <div class="admin-main">
-                          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
-                              <h3 style="margin:0; color:#00f2fe; font-size:16px;">🗂️ 图标数据库管理</h3>
+                          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:15px;">
+                              <div style="display:flex; align-items:center; gap: 15px; flex-wrap: wrap;">
+                                  <h3 style="margin:0; color:#00f2fe; font-size:16px;">🗂️ 图标数据库管理</h3>
+                                  <!-- 修复1：改用 oninput 处理手机输入法差异 -->
+                                  <input type="text" id="adminSearch" class="search-input" placeholder="🔍 搜索图标名称..." oninput="debounceAdminSearch()">
+                              </div>
                               <div style="display:flex; gap:10px;">
                                   <button class="submit-btn danger" id="batchDelBtn" onclick="batchDelete()" style="display:none; padding: 6px 15px;">批量删除</button>
                                   <button id="refreshBtn" onclick="loadList()" class="submit-btn outline">刷新列表</button>
@@ -514,6 +552,15 @@ export default {
           <script>
               let pwd = sessionStorage.getItem('adminPwd') || ''; let allAdminData =[]; let currentCat = '全部';
               if(pwd) login(pwd);
+
+              // 修复2：加入防抖机制，彻底告别移动端边打字边过滤产生的超级卡顿
+              let searchTimeout = null;
+              function debounceAdminSearch() {
+                  if(searchTimeout) clearTimeout(searchTimeout);
+                  searchTimeout = setTimeout(() => {
+                      renderTable();
+                  }, 300);
+              }
 
               async function login(savedPwd) {
                   const btn = document.querySelector('#loginBox .submit-btn');
@@ -567,8 +614,18 @@ export default {
               }
 
               function renderTable() {
-                  const tbody = document.getElementById('iconListBody'); const filtered = currentCat === '全部' ? allAdminData : allAdminData.filter(i => i.category === currentCat);
-                  if(filtered.length === 0) { document.getElementById('selectAll').checked = false; document.getElementById('batchDelBtn').style.display = 'none'; return tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#888;">数据库空空如也</td></tr>'; }
+                  const tbody = document.getElementById('iconListBody'); 
+                  
+                  // 1. 先进行分类过滤
+                  let filtered = currentCat === '全部' ? allAdminData : allAdminData.filter(i => i.category === currentCat);
+                  
+                  // 2. 进行搜索框过滤
+                  const keyword = document.getElementById('adminSearch') ? document.getElementById('adminSearch').value.toLowerCase() : '';
+                  if (keyword) {
+                      filtered = filtered.filter(i => i.name.toLowerCase().includes(keyword));
+                  }
+
+                  if(filtered.length === 0) { document.getElementById('selectAll').checked = false; document.getElementById('batchDelBtn').style.display = 'none'; return tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#888;">无匹配记录</td></tr>'; }
                   
                   tbody.innerHTML = filtered.map(item => {
                       const roleTag = item.role === 'admin' ? '<span style="color:#00f2fe;font-weight:bold;">Admin</span>' : '<span style="color:#aaa">Guest</span>';
@@ -576,7 +633,7 @@ export default {
                       
                       return \`<tr>
                           <td class="col-cb"><input type="checkbox" class="item-checkbox checkbox-custom" value="\${item.key}" onchange="checkSelection()"></td>
-                          <td class="col-preview"><img src="\${item.url}" class="icon-preview" loading="lazy" onclick="viewImage('\${item.url}')"></td>
+                          <td class="col-preview"><img src="\${item.url}" class="icon-preview" loading="lazy" onclick="viewImage('\${item.url}')" onerror="this.onerror=null; this.src='${fallbackImage}';"></td>
                           <td class="col-cat">\${catDisplay}</td>
                           <td class="col-name">
                               <div class="name-box">
@@ -811,7 +868,7 @@ export default {
     }
 
     // ==========================================
-    // 🤖 TG 管理员 Bot 引擎 (原机器人)
+    // 🤖 TG 管理员 Bot 引擎
     // ==========================================
     if (env.TG_BOT_TOKEN && request.method === 'POST' && path === `/webhook/tg/${env.TG_BOT_TOKEN}`) {
       const update = await request.json();
@@ -1037,7 +1094,7 @@ ${hostUrl}/admin
     }
 
     // ==========================================
-    // 🤖 TG 游客专属 Bot 引擎 (需要去环境变量配 GUEST_TG_BOT_TOKEN)
+    // 🤖 TG 游客专属 Bot 引擎
     // ==========================================
     if (env.GUEST_TG_BOT_TOKEN && request.method === 'POST' && path === `/webhook/tg_guest/${env.GUEST_TG_BOT_TOKEN}`) {
       const update = await request.json();
@@ -1086,7 +1143,6 @@ ${hostUrl}/guest.json
         const chatRoomId = String(update.message.chat.id);
         const msgText = update.message.text || '';
 
-        // --- 新增：游客登录处理逻辑 ---
         if (msgText.startsWith('/login')) {
             const inputPwd = msgText.replace('/login', '').trim();
             if (inputPwd === env.GUEST_PASSWORD) {
@@ -1110,7 +1166,6 @@ ${hostUrl}/guest.json
         }
 
         if (update.message.photo || update.message.document) {
-          // --- 新增：上传前的身份鉴权检查 ---
           const isAuth = await env.ICON_KV.get(`guest_auth:${chatRoomId}`);
           if (!isAuth) {
               await fetch(`https://api.telegram.org/bot${env.GUEST_TG_BOT_TOKEN}/sendMessage`, { 
@@ -1142,7 +1197,6 @@ ${hostUrl}/guest.json
             const r2Path = `${role}/${tgIconName}_${Date.now()}.${fileExt}`;
             await env.ICON_R2.put(r2Path, imageBuffer); const publicUrl = `${hostUrl}/${r2Path}`;
 
-            // 1. 回复给上传图片的游客
             let replyMsgId = null; 
             const tgRes = await fetch(`https://api.telegram.org/bot${env.GUEST_TG_BOT_TOKEN}/sendMessage`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1150,7 +1204,6 @@ ${hostUrl}/guest.json
             });
             if (tgRes.ok) { const tgData = await tgRes.json(); replyMsgId = tgData.result.message_id; }
             
-            // 2. [新增推送] -> 利用主管理机器人的 Token，推送到管理员中心群
             const primaryTargetId = env.ADMIN_CHAT_ID ? String(env.ADMIN_CHAT_ID).split(',')[0].trim() : null;
             if (primaryTargetId && env.TG_BOT_TOKEN && String(chatRoomId) !== primaryTargetId) {
                 fetch(`https://api.telegram.org/bot${env.TG_BOT_TOKEN}/sendMessage`, {
